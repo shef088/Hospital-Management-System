@@ -10,8 +10,8 @@ export interface Staff {
   gender: string;
   userType: "Staff";
   isActive: boolean;
-  role: { _id: string; name: string }; // Update role type
-  department: { _id: string; name: string }; // Update department type
+  role: { _id: string; name: string };  
+  department: { _id: string; name: string };  
   createdAt: string;
   updatedAt: string;
 }

@@ -5,11 +5,11 @@ export interface Patient {
   lastName: string;
   email: string;
   phone: string;
-  dob: string; // Assuming string, adjust if Date
+  dob: string;  
   address: string;
   gender: string;
   userType: "Patient";
-  patientRole: { _id: string; name: string }; 
+  role: { _id: string; name: string };  
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

@@ -27,7 +27,7 @@ const PatientAppointmentManagementPage = () => {
     const router = useRouter();
 
     useEffect(() => {
-        if (!user || (user.staffRole?.name?.toLowerCase() !== "patient" )) {
+        if (!user || (user.userType?.toLowerCase() !== "patient" )) {
             messageApi.error("You are not authorized to view this page.");
             router.push('/auth');
         }

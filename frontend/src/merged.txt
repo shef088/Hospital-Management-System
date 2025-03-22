@@ -2086,19 +2086,16 @@ import React, { useState } from 'react';
 import { Typography, Button, Modal } from 'antd';
 import NurseDashboardLayout from '@/components/Layout/NurseDashboardLayout';
 import MyTaskList from "@/components/Task/MyTaskList"
-import { useCompleteTaskMutation } from '@/services/task/taskSliceAPI';
+ 
 import TaskView from "@/components/Task/TaskView";
 import { Task } from '@/services/task/taskSliceAPI';
-import TaskEditForm from '@/components/Task/TaskEditForm';
-import TaskCreateForm from '@/components/Task/TaskCreateForm';
+ 
 import TaskComplete from '@/components/Task/TaskComplete';
 const { Title } = Typography;
 
 const NurseMyTasksPage = () => {
-    const [completeTask, { isLoading: isCompleting, isError: isCompleteError }] = useCompleteTaskMutation();
     const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-    const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  
     const [isCompleteModalVisible, setIsCompleteModalVisible] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -2106,27 +2103,8 @@ const NurseMyTasksPage = () => {
             setSelectedTask(task);
             setIsViewModalVisible(true);
         };
-        const showCreateModal = () => {
-            setIsCreateModalVisible(true);
-        };
-    
-        const handleCreateSuccess = () => {
-            setIsCreateModalVisible(false);
-        };
-           const handleEdit = (task: Task) => {
-                setSelectedTask(task);
-                setIsEditModalVisible(true);
-            };
-            const handleEditSuccess = () => {
-                setIsEditModalVisible(false);
-                setSelectedTask(null);
-            };
-        
-            const handleEditCancel = () => {
-                setIsEditModalVisible(false);
-                setSelectedTask(null);
-            };
-
+       
+         
             const handleComplete = (task: Task) => {
                 setSelectedTask(task);
                 setIsCompleteModalVisible(true);
@@ -2140,18 +2118,16 @@ const NurseMyTasksPage = () => {
         <NurseDashboardLayout >
             <Title level={3}>My Tasks</Title>
             <p>View your assigned tasks here.</p>
-            <Button type="primary" onClick={showCreateModal} style={{ marginBottom: 16 }}>
-                            Create Task
-            </Button>
+      
             <MyTaskList 
               onComplete={handleComplete} 
               onView={handleView}
-             
+              
               
             />  
              <Modal
-                    title="View Task"
-                    open={isViewModalVisible}
+                    title="Complete Task"
+                    open={isCompleteModalVisible}
                     onCancel={() => setIsCompleteModalVisible(false)}
                     footer={null}
                 >
@@ -2171,28 +2147,8 @@ const NurseMyTasksPage = () => {
                         <TaskView task={selectedTask} />
                     )}
                 </Modal>
-                 <Modal
-                                title="Create Task"
-                                open={isCreateModalVisible}
-                                onCancel={() => setIsCreateModalVisible(false)}
-                                footer={null}
-                            >
-                                <TaskCreateForm onSuccess={handleCreateSuccess} />
-                            </Modal>
-                            <Modal
-                                title="Edit Task"
-                                open={isEditModalVisible}
-                                onCancel={handleEditCancel}
-                                footer={null}
-                            >
-                                {selectedTask && (
-                                    <TaskEditForm
-                                        task={selectedTask}
-                                        onSuccess={handleEditSuccess}
-                                        onCancel={handleEditCancel}
-                                    />
-                                )}
-                            </Modal>
+                 
+                            
         </NurseDashboardLayout>
     );
 };
@@ -6058,17 +6014,20 @@ export default AppFooter;
 
 ===== File: /src/components/Layout/Header.tsx =====
 // src/components/Layout/Header.tsx
-'use client'; // Required for client-side rendering in App Router
+'use client';
 
-import React from 'react';
-import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu, Badge, message } from 'antd'; // Import message
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
-import { UserOutlined } from '@ant-design/icons';
+import { UserOutlined, BellOutlined } from '@ant-design/icons'; // Import BellOutlined
 import { useLogoutMutation } from '@/services/auth/authSliceAPI';
 import { persistor } from '@/store/store';
-import { logout } from '@/services/auth/authSlice'; 
+import { logout } from '@/services/auth/authSlice';
 import Link from 'next/link';
+import { useGetMyNotificationsQuery } from '@/services/notification/notificationSliceAPI'; // Import the notification query
+import type { Notification as NotificationType } from '@/services/notification/notificationSliceAPI'; // Import API Notification Type
+import { getSocket } from '@/services/socket/socket'; // Import your socket instance
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -6077,7 +6036,98 @@ const AppHeader: React.FC = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const user = useAppSelector((state) => state.auth.user);
-    const [logoutMutation, { isLoading }] =  useLogoutMutation();
+    const token = useAppSelector((state) => state.auth.token); // Get Token from Redux store
+    const [logoutMutation, { isLoading }] = useLogoutMutation();
+    const [messageApi, contextHolder] = message.useMessage();
+
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, refetch } = useGetMyNotificationsQuery({
+        read:false
+    });
+    const [notifications, setNotifications] = useState<NotificationType[]>([]); // State to hold notifications
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        if (notificationsData?.notifications) {
+            setNotifications(notificationsData.notifications);
+        }
+    }, [notificationsData]);
+
+    useEffect(() => {
+        if (notifications) {
+            const count = notifications.length;
+            setUnreadCount(count);
+        }
+    }, [notifications]);
+
+   const showNotification = (notification: NotificationType) => {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            if (Notification.permission === 'granted') {
+                new window.Notification(notification.message, { // Correct to Window.Notification
+                    body: `Type: ${notification.type}, Priority: ${notification.priority}`,
+                    icon: '/icon.png', // Optional: Replace with your icon URL
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new window.Notification(notification.message, {  // Correct to Window.Notification
+                            body: `Type: ${notification.type}, Priority: ${notification.priority}`,
+                            icon: '/icon.png',
+                        });
+                    }
+                });
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (user && token) {
+
+            //Fetch the socket
+            const socket = getSocket()
+
+            socket.auth = (cb) => {
+                cb({ token: token });
+            };
+
+            socket.connect();
+            //To connect socket
+
+            // Function to handle new notifications from the socket
+            const handleNewNotification = (notification: NotificationType) => { // Correct to NotificationType
+                setNotifications((prevNotifications) => [notification, ...prevNotifications]);
+                showNotification(notification); // Show browser notification
+                refetch(); // Refresh the notifications list from the API
+            };
+
+            // Function to update unreadCount
+            const handleNotificationCount = (data: { count: number }) => {
+                console.log("the count ::", data.count);
+                setUnreadCount(data.count);
+            };
+
+            socket.on("connect", () => {
+                console.log("socket is connected!");
+            });
+
+            socket.on('newNotification', handleNewNotification);
+
+            socket.on("notificationCount", handleNotificationCount);
+
+            socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+            });
+
+            // Clean up the socket listeners
+            return () => {
+                socket.off('connect');
+                socket.off('newNotification', handleNewNotification);
+                socket.off('notificationCount', handleNotificationCount);
+                socket.off('disconnect');
+
+                socket.disconnect();
+            };
+        }
+    }, [user, refetch, token]); // Re-run effect when user or token changes
 
     const handleLogout = async () => {
         try {
@@ -6123,6 +6173,7 @@ const AppHeader: React.FC = () => {
             height: '64px',
             boxShadow: '0 2px 4px 0 rgba(0,0,0,0.1)',
         }}>
+            {contextHolder}
             <div>
                 <Title level={3} style={{ color: '#1890ff', margin: 0, float: 'left', marginRight: '20px' }}>
                     Hospital System
@@ -6130,17 +6181,22 @@ const AppHeader: React.FC = () => {
 
             </div>
             {user ? (
-                <Dropdown menu={menu} placement="bottomRight" arrow>
-                    <a onClick={e => e.preventDefault()}>
-                        <Space align="center">
-                            <Text>
-                                {user.firstName} {user.lastName} ({user.userType})
-                            </Text>
-                            <Avatar icon={<UserOutlined />} />
-
-                        </Space>
-                    </a>
-                </Dropdown>
+               <Space align="center">
+               <Badge count={unreadCount}>
+                   <Dropdown menu={menu} placement="bottomRight" arrow>
+                       <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
+                   </Dropdown>
+               </Badge>
+               <Text>
+                   {user.firstName} {user.lastName} ({user.userType})
+               </Text>
+               <Dropdown menu={menu} placement="bottomRight" arrow>
+                   <a onClick={e => e.preventDefault()}>
+                       <Avatar icon={<UserOutlined />} />
+                   </a>
+               </Dropdown>
+              
+           </Space>
             ) : (
                 <Link href="/auth">
                     <Button type="primary">
@@ -7255,9 +7311,11 @@ const MyNotificationList: React.FC<MyNotificationListProps> = ({ onView, onEdit,
     const [priorityFilter, setPriorityFilter] = useState<string | undefined>(undefined);
     const [sortBy, setSortBy] = useState<string | undefined>(undefined);
     const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(undefined);
+    const [readFilter, setReadFilter] = useState<boolean | undefined>(undefined);
     const [selectedNotificationId,setSelectedNotificationId] =  useState<string | null>(null)
     const [markNotificationAsRead, { isLoading: isMarkingRead }] = useMarkMyNotificationAsReadMutation();
     const [markAllNotificationsAsRead, { isLoading: isMarkingAllRead }] = useMarkAllMyNotificationsAsReadMutation(); 
+    const [messageApi, contextHolder] = message.useMessage();
 
     const { data: notificationData, isLoading, isError, error } = useGetMyNotificationsQuery({
         page: currentPage,
@@ -7267,8 +7325,8 @@ const MyNotificationList: React.FC<MyNotificationListProps> = ({ onView, onEdit,
         priority: priorityFilter,
         sortBy: sortBy,
         sortOrder: sortOrder,
+        read: readFilter,
     });
-    const [messageApi, contextHolder] = message.useMessage();
 
     const totalNotificationCount = notificationData?.totalNotifications || 0;
 
@@ -7373,7 +7431,8 @@ const MyNotificationList: React.FC<MyNotificationListProps> = ({ onView, onEdit,
     if (isError) return <p>Error fetching notifications: {(error as any)?.data?.message || "An unexpected error occurred."}</p>;
 
     return (
-        <>{contextHolder}
+        <>
+            {contextHolder}
             <Input
                 placeholder="Search notifications..."
                 value={searchTerm}
@@ -7417,7 +7476,20 @@ const MyNotificationList: React.FC<MyNotificationListProps> = ({ onView, onEdit,
                     <Select.Option value="warning">Warning</Select.Option>
                     <Select.Option value="info">Info</Select.Option>
                 </Select>
-                 <Button
+                 <Select
+                        placeholder="Filter by Read Status"
+                        style={{ width: 150 }}
+                        onChange={(value) => {
+                            setReadFilter(value === "true" ? true : value === "false" ? false : undefined);
+                            setCurrentPage(1);
+                        }}
+                        allowClear
+                    >
+                        <Select.Option value="true">Read</Select.Option>
+                        <Select.Option value="false">Unread</Select.Option>
+                    </Select>
+                  
+                  <Button
                       type="primary"
                       onClick={handleMarkAllAsRead}
                       loading={isMarkingAllRead}
@@ -10036,6 +10108,7 @@ import { Button, message } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import { useCompleteTaskMutation, Task } from '@/services/task/taskSliceAPI';
 import { useAppSelector } from '@/store/store';
+import logger from '@/utils/logger';
 
 interface TaskCompleteProps {
     task: Task;
@@ -10051,6 +10124,7 @@ const TaskComplete: React.FC<TaskCompleteProps> = ({ task, onSuccess }) => {
     const isCreatedByUser = user?._id === task.createdBy._id;
 
     const handleComplete = async () => {
+        logger.silly("in complete task")
         try {
             await completeTask(task._id).unwrap();
             messageApi.success('Task completed successfully!');
@@ -10111,9 +10185,8 @@ const TaskCreateForm: React.FC<TaskCreateFormProps> = ({ onSuccess }) => {
         } catch (error: any) {
             logger.error(error)
             const  errorMessage = `Failed to create task: ${error?.data.message || 'Unknown error'}`;
-                        messageApi.error(errorMessage);
-            messageApi.error(`Failed to create task: ${error?.data.message || 'Unknown error'}`);
-        }
+            messageApi.error(errorMessage);
+         }
     };
 
     return (
@@ -10146,8 +10219,7 @@ const TaskCreateForm: React.FC<TaskCreateFormProps> = ({ onSuccess }) => {
                     rules={[{ required: true, message: 'Please select a task type!' }]}
                 >
                     <Select>
-                        <Select.Option value="appointment">Appointment</Select.Option>
-                        <Select.Option value="lab_test">Lab Test</Select.Option>
+                      
                         <Select.Option value="medical_record">Medical Record</Select.Option>
                         <Select.Option value="discharge">Discharge</Select.Option>
                         <Select.Option value="prescription">Prescription</Select.Option>
@@ -11249,7 +11321,7 @@ import { BASE_URL } from "@/constants/constants";
 // Define the Notification interface (match your backend model)
 export interface Notification {
     _id: string;
-    user: string; // User ID
+    user: string;  
     message: string;
     type: "appointment" | "medical_record" | "reminder" | "system" | "shift";
     priority: "urgent" | "warning" | "info";
@@ -11262,10 +11334,11 @@ interface GetNotificationsParams {
     page?: number;
     limit?: number;
     search?: string;
-    type?: string; // Optional filtering by notification type
+    type?: string;  
     priority?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
+    read?: boolean
 }
 
 interface GetNotificationsResponse {
@@ -11301,13 +11374,14 @@ export const notificationApi = createApi({
     endpoints: (builder) => ({
         getMyNotifications: builder.query<GetNotificationsResponse, GetNotificationsParams>({
             query: (params) => {
-                const { page, limit, search, type, priority, sortBy, sortOrder } = params || {};
+                const { page, limit, search, type, priority, sortBy, sortOrder, read } = params || {};
                 let url = `notifications?page=${page}&limit=${limit}`;
                 if (search) url += `&search=${search}`;
                 if (type) url += `&type=${type}`;
                 if (priority) url += `&priority=${priority}`;
                 if (sortBy) url += `&sortBy=${sortBy}`;
                 if (sortOrder) url += `&sortOrder=${sortOrder}`;
+                if (read !== undefined) url += `&read=${read} ` 
                 return url;
             },
             providesTags: (result) =>
@@ -11882,6 +11956,49 @@ export interface Shift {
     currentPage: number;
     totalPages: number;
   }
+
+===== File: /src/services/socket/socket.ts =====
+// src/services/socket/socket.ts
+import { BASE_URL } from '@/constants/constants';
+import { io } from 'socket.io-client';
+import logger from "@/utils/logger"
+
+const URL = BASE_URL;
+
+let socket;
+
+export const getSocket = () => {
+    if (!socket) {
+        socket = io(URL, {
+            autoConnect: true,
+            auth: (cb) => {
+                try {
+                    if (typeof window !== 'undefined') {
+                        // Attempt to get token from localStorage on the client-side
+                        const token = localStorage.getItem('token'); // Or however you store your token
+
+                        if (token) {
+                            console.log("socket token::", token)
+                           cb({ token: token });
+                        }
+                        else {
+                              cb({ token: null });  // send null if it fails.
+                        }
+
+                    } else {
+                        // Provide a default or empty token on the server side
+                        cb({ token: null });
+                    }
+
+                } catch (error) {
+                    logger.error(error)
+                    cb({ token: null });
+                }
+            },
+        });
+    }
+    return socket;
+};
 
 ===== File: /src/services/staff/staffSliceAPI.ts =====
 // src/services/staff/staffSliceAPI.ts

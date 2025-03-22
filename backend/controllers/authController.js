@@ -25,6 +25,11 @@ const register = async (req, res) => {
         let newUser;
 
         if (userType === "Patient") {
+             // Validate patient role
+             const p_role = await Role.findOne({ name:"Patient"}).populate("permissions");
+             if (!role) {
+                 return res.status(400).json({ message: "Invalid patient role." });
+             }
             newUser = new Patient({
                 firstName,
                 lastName,
@@ -33,7 +38,8 @@ const register = async (req, res) => {
                 phone,
                 address,
                 gender,
-                dob
+                dob,
+                role: p_role._id,
             });
 
         } else if (userType === "Staff") {
@@ -110,12 +116,7 @@ const login = async (req, res) => {
                 select: "name",
                 options: { strictPopulate: false }, // Avoid errors for Patients
             })
-            .populate({
-                path: "patientRole",
-                select: "name permissions",
-                populate: { path: "permissions", select: "name" }, // Include permissions
-                options: { strictPopulate: false },
-            });
+           
 
         if (!user) {
             return res.status(400).json({ message: "Invalid email or password." });
