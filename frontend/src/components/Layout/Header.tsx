@@ -132,7 +132,7 @@ const AppHeader: React.FC = () => {
             // 4. Redirect to the login page
             window.location.href = '/auth'; // Full page reload
         } catch (error: any) {
-            console.error('Logout failed:', error.message || error.error);
+            console.error('Logout failed:', error.data.message || error.error);
             // Handle logout error (e.g., display an error message)
         }
     };
