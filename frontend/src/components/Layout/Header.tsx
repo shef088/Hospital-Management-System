@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu, Badge, message } from 'antd'; // Import message
+import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu, Badge, message } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
-import { UserOutlined, BellOutlined } from '@ant-design/icons'; // Import BellOutlined
+import { UserOutlined, BellOutlined } from '@ant-design/icons';
 import { useLogoutMutation } from '@/services/auth/authSliceAPI';
 import { persistor } from '@/store/store';
 import { logout } from '@/services/auth/authSlice';
@@ -70,7 +70,7 @@ const AppHeader: React.FC = () => {
             //Fetch the socket
             const socket = getSocket()
 
-            socket.auth = (cb) => {
+            socket.auth = (cb:any) => {
                 cb({ token: token });
             };
 
@@ -168,7 +168,7 @@ const AppHeader: React.FC = () => {
             {user ? (
                <Space align="center">
                <Badge count={unreadCount}>
-                   <Dropdown menu={menu} placement="bottomRight" arrow>
+                   <Dropdown  placement="bottomRight" arrow>
                        <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
                    </Dropdown>
                </Badge>

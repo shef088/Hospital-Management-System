@@ -36,8 +36,8 @@ export interface PatientUpdateRequest {
 }
 
 export interface GetPatientsParams {
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
   search?: string;
 }
 
