@@ -9,6 +9,7 @@ export interface Patient {
   gender: string;
   userType: "Patient"; // ENUM
   isActive: boolean;
+  role?: { _id: string; name: string }; 
   medicalRecords: any[];  // Or define a type for medical records if known
   createdAt: string;
   updatedAt: string;

@@ -1,7 +1,7 @@
 // src/components/Layout/Header.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu, Badge, message } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
@@ -10,9 +10,9 @@ import { useLogoutMutation } from '@/services/auth/authSliceAPI';
 import { persistor } from '@/store/store';
 import { logout } from '@/services/auth/authSlice';
 import Link from 'next/link';
-import { useGetMyNotificationsQuery } from '@/services/notification/notificationSliceAPI';   
-import type { Notification as NotificationType } from '@/services/notification/notificationSliceAPI'; // Import API Notification Type
-import { getSocket } from '@/services/socket/socket'; 
+import { useGetMyNotificationsQuery  } from '@/services/notification/notificationSliceAPI';
+import type {  Notification as NotificationType } from '@/services/notification/notificationSliceAPI'; // Import API Notification Type
+import { getSocket } from '@/services/socket/socket';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -21,30 +21,19 @@ const AppHeader: React.FC = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const user = useAppSelector((state) => state.auth.user);
-    const token = useAppSelector((state) => state.auth.token);  
+    const token = useAppSelector((state) => state.auth.token);
     const [logoutMutation, { isLoading }] = useLogoutMutation();
     const [messageApi, contextHolder] = message.useMessage();
 
-    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, refetch } = useGetMyNotificationsQuery({
-        read:false
-    });
     const [notifications, setNotifications] = useState<NotificationType[]>([]); // State to hold notifications
     const [unreadCount, setUnreadCount] = useState(0);
 
-    useEffect(() => {
-        if (notificationsData?.notifications) {
-            setNotifications(notificationsData.notifications);
-        }
-    }, [notificationsData]);
+    //RTK Query Call:
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, refetch } = useGetMyNotificationsQuery({
+        read:false
+    });
 
-    useEffect(() => {
-        if (notifications) {
-            const count = notifications.length;
-            setUnreadCount(count);
-        }
-    }, [notifications]);
-
-   const showNotification = (notification: NotificationType) => {
+    const showNotification = (notification: NotificationType) => {
         if (typeof window !== 'undefined' && 'Notification' in window) {
             if (Notification.permission === 'granted') {
                 new window.Notification(notification.message, { // Correct to Window.Notification
@@ -54,7 +43,7 @@ const AppHeader: React.FC = () => {
             } else if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        new window.Notification(notification.message, {  
+                        new window.Notification(notification.message, {
                             body: `Type: ${notification.type}, Priority: ${notification.priority}`,
                             icon: '/icon.png',
                         });
@@ -64,27 +53,22 @@ const AppHeader: React.FC = () => {
         }
     };
 
-    useEffect(() => {
+    const setupSocket = useCallback(() => {
         if (user && token) {
+            const socket = getSocket();
 
-            //Fetch the socket
-            const socket = getSocket()
-
-            socket.auth = (cb:any) => {
+            socket.auth = (cb: any) => {
                 cb({ token: token });
             };
 
             socket.connect();
-            //To connect socket
 
-            // Function to handle new notifications from the socket
-            const handleNewNotification = (notification: NotificationType) => { // Correct to NotificationType
+            const handleNewNotification = (notification: NotificationType) => {
                 setNotifications((prevNotifications) => [notification, ...prevNotifications]);
-                showNotification(notification); // Show browser notification
+                showNotification(notification);
                 refetch(); // Refresh the notifications list from the API
             };
 
-            // Function to update unreadCount
             const handleNotificationCount = (data: { count: number }) => {
                 console.log("the count ::", data.count);
                 setUnreadCount(data.count);
@@ -92,51 +76,75 @@ const AppHeader: React.FC = () => {
 
             socket.on("connect", () => {
                 console.log("socket is connected!");
+                refetch()
             });
 
             socket.on('newNotification', handleNewNotification);
-
             socket.on("notificationCount", handleNotificationCount);
 
             socket.on('disconnect', () => {
                 console.log('Socket disconnected');
             });
 
-            // Clean up the socket listeners
             return () => {
                 socket.off('connect');
                 socket.off('newNotification', handleNewNotification);
                 socket.off('notificationCount', handleNotificationCount);
                 socket.off('disconnect');
-
                 socket.disconnect();
             };
         }
-    }, [user, refetch, token]); // Re-run effect when user or token changes
+        return () => {};
+    }, [user, refetch, token, setNotifications]);
+
+    useEffect(() => {
+        let cleanup = () => {};
+        if (user && token) {
+            cleanup = setupSocket();
+        }
+
+        return () => {
+            cleanup();
+        };
+    }, [user, token, setupSocket]);
+
+     useEffect(() => {
+         if (notificationsData?.notifications) {
+             setNotifications(notificationsData.notifications);
+         }
+     }, [notificationsData]);
+
+    useEffect(() => {
+         if (notifications) {
+             const count = notifications.length;
+             setUnreadCount(count);
+         }
+     }, [notifications]);
 
     const handleLogout = async () => {
         try {
-            // 1. Call the backend logout mutation (if it exists)
             try {
                 await logoutMutation().unwrap();
             } catch (e) {
                 console.log("no logout function", e)
             }
-
-            // 2. Clear the Redux state
             dispatch(logout());
-
-            // 3. Persist store
             persistor.purge();
-
-            // 4. Redirect to the login page
             window.location.href = '/auth'; // Full page reload
         } catch (error: any) {
             console.error('Logout failed:', error.data.message || error.error);
-            // Handle logout error (e.g., display an error message)
         }
     };
 
+    const getNotificationLink = () => {
+        if (user?.userType?.toLowerCase() === 'patient') {
+            return `/dashboard/patient/my-notification`;
+        } else if (user?.userType?.toLowerCase() === 'staff' && user.role?.name) {
+            return `/dashboard/staff/${user.role.name.toLowerCase()}/notification/my-notification`;
+        } else {
+            return '/auth';  
+        }
+    };
     const menuItems = [
         {
             key: 'logout',
@@ -161,15 +169,17 @@ const AppHeader: React.FC = () => {
             {contextHolder}
             <div>
                 <Title level={3} style={{ color: '#1890ff', margin: 0, float: 'left', marginRight: '20px' }}>
-                    Hospital System
+                    Hospital Managememt System
                 </Title>
 
             </div>
             {user ? (
                <Space align="center">
-               <Badge count={unreadCount}>
-                    <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
-               </Badge>
+               <Link href={getNotificationLink()}>
+                    <Badge count={unreadCount}>
+                        <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
+                    </Badge>
+               </Link>
                <Text>
                    {user.firstName} {user.lastName} ({user.userType})
                </Text>

@@ -182,7 +182,7 @@ const PatientAppointmentManagementPage = () => {
     const router = useRouter();
 
     useEffect(() => {
-        if (!user || (user.staffRole?.name?.toLowerCase() !== "patient" )) {
+        if (!user || (user.userType?.toLowerCase() !== "patient" )) {
             messageApi.error("You are not authorized to view this page.");
             router.push('/auth');
         }
@@ -700,36 +700,132 @@ export default AdminMyNotificationsPage;
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Typography, message } from 'antd';
+import { Typography, Card, Col, Row, Statistic, message, List, Avatar, Button } from 'antd';
 import AdminDashboardLayout from '@/components/Layout/AdminDashboardLayout';
-import { useAppSelector } from "@/store/store"; 
+import { useAppSelector } from "@/store/store";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Loader from '@/components/Layout/Loader';
+import { NotificationOutlined } from '@ant-design/icons';
 
-const { Title, Paragraph } = Typography;
+//RTK Queries imports:
+import { useGetStaffQuery } from '@/services/staff/staffSliceAPI';
+import { useGetPatientsQuery } from '@/services/patient/patientSliceAPI';
+import { useGetDepartmentsQuery } from '@/services/department/departmentSliceAPI';
+import { useGetMyNotificationsQuery, Notification } from '@/services/notification/notificationSliceAPI';
+import { formatDate } from '@/utils/dateUtils';
+
+const { Title, Paragraph, Text } = Typography;
 
 const AdminDashboard = () => {
-    const user = useAppSelector((state) => state.auth.user); // Get the logged-in user
+    const user = useAppSelector((state) => state.auth.user);
     const router = useRouter();
+    const [messageApi, contextHolder] = message.useMessage();
+
+    //RTK Queries to fetch counts
+    const { data: staffData, isLoading: isStaffLoading, isError: isStaffError, error: staffError } = useGetStaffQuery({});
+    const { data: patientsData, isLoading: isPatientsLoading, isError: isPatientsError, error: patientsError } = useGetPatientsQuery({});
+    const { data: departmentsData, isLoading: isDepartmentsLoading, isError: isDepartmentsError, error: departmentsError } = useGetDepartmentsQuery({});
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, error: notificationsError } = useGetMyNotificationsQuery({ limit: 5 });
 
     useEffect(() => {
-        // Basic role check - improve with fine-grained permissions later
-        if (!user || (user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "admin"  )) {
-            message.error("You are not authorized to view this page.");
-            router.push('/auth'); // Redirect to login or unauthorized page
+        if (!user || (user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "admin")) {
+            messageApi.error("You are not authorized to view this page.");
+            router.push('/auth');
         }
     }, [user, router]);
 
-  
-    return (
-        <AdminDashboardLayout >
-            <Title level={3}>Admin Dashboard</Title>
-            <p>Welcome, Admin! Here's an overview of the system:</p>
+    if (isStaffLoading || isPatientsLoading || isDepartmentsLoading || isNotificationsLoading) {
+        return (
+            <AdminDashboardLayout>
+                {contextHolder}
+                <Loader />
+            </AdminDashboardLayout>
+        );
+    }
 
-            {/* Display some placeholder stats */}
-            <Title level={4}>System Statistics</Title>
-            <Paragraph>Total Users: [Fetch total users from backend]</Paragraph>
-            <Paragraph>Total Patients: [Fetch total patients from backend]</Paragraph>
-            <Paragraph>Total Staff: [Fetch total staff from backend]</Paragraph>
+    if (isStaffError || isPatientsError || isDepartmentsError || isNotificationsError) {
+        let errorMessage = "Error loading data.";
+        if (isStaffError) errorMessage += ` Staff: ${ (staffError as any)?.data?.message || "Unknown"}`;
+        if (isPatientsError) errorMessage += ` Patients: ${ (patientsError as any)?.data?.message || "Unknown"}`;
+        if (isDepartmentsError) errorMessage += ` Departments: ${ (departmentsError as any)?.data?.message || "Unknown"}`;
+        if (isNotificationsError) errorMessage += ` Notifications: ${ (notificationsError as any)?.data?.message || "Unknown"}`;
+
+        return (
+            <AdminDashboardLayout>
+                {contextHolder}
+                <Title level={4} type="danger">{errorMessage}</Title>
+            </AdminDashboardLayout>
+        );
+    }
+
+    const totalStaff = staffData?.totalStaff || 0;
+    const totalPatients = patientsData?.totalPatients || 0;
+    const totalDepartments = departmentsData?.totalDepartments || 0;
+
+    return (
+        <AdminDashboardLayout>
+            {contextHolder}
+            <Title level={3}>Admin Dashboard</Title>
+            <Paragraph>Welcome, Admin! Here's an overview of the system:</Paragraph>
+
+            <Row gutter={16}>
+                <Col span={8}>
+                    <Link href="/dashboard/staff/admin/staff">
+                        <Card>
+                            <Statistic
+                                title="Total Staff"
+                                value={totalStaff}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+                <Col span={8}>
+                    <Link href="/dashboard/staff/admin/patient">
+                        <Card>
+                            <Statistic
+                                title="Total Patients"
+                                value={totalPatients}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+                <Col span={8}>
+                    <Link href="/dashboard/staff/admin/department">
+                        <Card>
+                            <Statistic
+                                title="Total Departments"
+                                value={totalDepartments}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+            </Row>
+
+            <Card
+                title={<><NotificationOutlined /> Recent Notifications</>}
+                style={{ marginTop: 16 }}
+                loading={isNotificationsLoading}
+            >
+                {isNotificationsError ? (
+                    <Text type="danger">Error loading notifications:  { (notificationsError as any)?.data?.message || "An unexpected error occurred."}</Text>
+                ) : (
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={notificationsData?.notifications || []}
+                        renderItem={(item: Notification) => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    avatar={<Avatar icon={<NotificationOutlined />} />}
+                                    title={<Text>{item.message}</Text>}
+                                    description={<Text type="secondary">{formatDate(item.createdAt)}</Text>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                )}
+                <Button type="link" href="/dashboard/staff/admin/notification/my-notification">View All Notifications</Button>
+            </Card>
         </AdminDashboardLayout>
     );
 };
@@ -1589,23 +1685,120 @@ const DoctorMyNotificationsPage = () => {
 export default DoctorMyNotificationsPage;
 
 ===== File: /src/app/dashboard/staff/doctor/page.tsx =====
-// src/app/staff/doctor/dashboard/page.tsx
+// src/app/dashboard/staff/doctor/page.tsx
 'use client';
 
 import React from 'react';
-import { Typography } from 'antd';
+import { Typography, Card, Col, Row, Statistic, List, Avatar, Button } from 'antd';
 import DoctorDashboardLayout from '@/components/Layout/DoctorDashboardLayout';
+import { useAppSelector } from "@/store/store";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Loader from '@/components/Layout/Loader';
+import { NotificationOutlined, FileTextOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
 
-const { Title } = Typography;
+//RTK Queries imports:
+import { useGetMyNotificationsQuery, Notification } from '@/services/notification/notificationSliceAPI';
+import { useGetAppointmentsQuery } from '@/services/appointment/appointmentSliceAPI';
+import { useGetPatientsQuery } from '@/services/patient/patientSliceAPI';
+import { formatDate } from '@/utils/dateUtils';
+
+const { Title, Paragraph, Text } = Typography;
 
 const DoctorDashboard = () => {
-  return (
-    <DoctorDashboardLayout >
-      <Title level={3}>Doctor Dashboard</Title>
-      <p>Welcome, Doctor! Manage patients, appointments, and medical records here.</p>
-       
-    </DoctorDashboardLayout>
-  );
+    const user = useAppSelector((state) => state.auth.user);
+    const router = useRouter();
+
+    //RTK Queries
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, error: notificationsError } = useGetMyNotificationsQuery({ limit: 5 });
+    const { data: appointmentsData, isLoading: isAppointmentsLoading, isError: isAppointmentsError, error: appointmentsError } = useGetAppointmentsQuery({ limit: 5 });
+    const { data: patientsData, isLoading: isPatientsLoading, isError: isPatientsError, error: patientsError } = useGetPatientsQuery({});
+
+    if (!user || user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "doctor") {
+        router.push('/auth'); // Redirect to login if unauthorized
+        return null; // Or render an "Unauthorized" component
+    }
+
+    if (isNotificationsLoading || isAppointmentsLoading || isPatientsLoading) {
+        return (
+            <DoctorDashboardLayout>
+                <Loader />
+            </DoctorDashboardLayout>
+        );
+    }
+
+    if (isNotificationsError || isAppointmentsError || isPatientsError) {
+        let errorMessage = "Error loading data.";
+        if (isNotificationsError) errorMessage += ` Notifications: ${(notificationsError as any)?.data?.message || "Unknown"}`;
+        if (isAppointmentsError) errorMessage += ` Appointments: ${(appointmentsError as any)?.data?.message || "Unknown"}`;
+        if (isPatientsError) errorMessage += ` Patients: ${(patientsError as any)?.data?.message || "Unknown"}`;
+        return (
+            <DoctorDashboardLayout>
+                <Title level={4} type="danger">{errorMessage}</Title>
+            </DoctorDashboardLayout>
+        );
+    }
+
+    const totalUpcomingAppointments = appointmentsData?.appointments?.length || 0;
+    const totalAssignedPatients = patientsData?.patients?.length || 0; // Assuming you have a way to filter for assigned patients
+
+    return (
+        <DoctorDashboardLayout>
+            <Title level={3}>Doctor Dashboard</Title>
+            <Paragraph>Welcome, Doctor! Manage patients, appointments, and medical records here.</Paragraph>
+
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Link href="/dashboard/staff/doctor/appointment">
+                        <Card>
+                            <Statistic
+                                title="Upcoming Appointments"
+                                value={totalUpcomingAppointments}
+                                prefix={<CalendarOutlined />}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+                <Col span={12}>
+                    <Link href="/dashboard/staff/doctor/patient">
+                        <Card>
+                            <Statistic
+                                title="Assigned Patients"
+                                value={totalAssignedPatients}
+                                prefix={<UserOutlined />}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+            </Row>
+
+            <Card
+                title={<><NotificationOutlined /> Recent Notifications</>}
+                style={{ marginTop: 16 }}
+                loading={isNotificationsLoading}
+            >
+                {isNotificationsError ? (
+                    <Text type="danger">Error loading notifications: { (notificationsError as any)?.data?.message || "An unexpected error occurred."}</Text>
+                ) : (
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={notificationsData?.notifications || []}
+                        renderItem={(item: Notification) => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    avatar={<Avatar icon={<NotificationOutlined />} />}
+                                    title={<Text>{item.message}</Text>}
+                                    description={<Text type="secondary">{formatDate(item.createdAt)}</Text>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                )}
+                <Button type="link" href="/dashboard/staff/doctor/notification/my-notification">View All Notifications</Button>
+            </Card>
+
+        </DoctorDashboardLayout>
+    );
 };
 
 export default DoctorDashboard;
@@ -1942,27 +2135,106 @@ const NurseMyNotificationsPage = () => {
 export default NurseMyNotificationsPage;
 
 ===== File: /src/app/dashboard/staff/nurse/page.tsx =====
-// src/app/staff/nurse/dashboard/page.tsx
+// src/app/dashboard/staff/nurse/page.tsx
 'use client';
 
 import React from 'react';
-import { Typography } from 'antd';
+import { Typography, Card, Col, Row, Statistic, List, Avatar, Button } from 'antd';
 import NurseDashboardLayout from '@/components/Layout/NurseDashboardLayout';
+import { useAppSelector } from "@/store/store";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Loader from '@/components/Layout/Loader';
+import { NotificationOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons';
 
-const { Title } = Typography;
+//RTK Queries imports:
+import { useGetMyNotificationsQuery, Notification } from '@/services/notification/notificationSliceAPI';
+import { useGetMyTasksQuery } from '@/services/task/taskSliceAPI';
+import { formatDate } from '@/utils/dateUtils';
+
+const { Title, Paragraph, Text } = Typography;
 
 const NurseDashboard = () => {
-  return (
-    <NurseDashboardLayout >
-      <Title level={3}>Nurse Dashboard</Title>
-      <p>Welcome, Nurse! Manage patient care, medications, and vitals here.</p>
-      {/* Add Nurse-specific content here */}
+    const user = useAppSelector((state) => state.auth.user);
+    const router = useRouter();
 
+    //RTK Queries
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, error: notificationsError } = useGetMyNotificationsQuery({ limit: 5 });
+     const { data: tasksData, isLoading: isTasksLoading, isError: isTasksError, error: tasksError } = useGetMyTasksQuery({ limit: 5 }); // Limiting to 5 tasks for dashboard
 
+    if (!user || user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "nurse") {
+        router.push('/auth'); // Redirect to login if unauthorized
+        return null; // Or render an "Unauthorized" component
+    }
 
-      {/* add view appointment for patients nurses have been assigned to later if schema changes */}
-    </NurseDashboardLayout>
-  );
+    if (isNotificationsLoading || isTasksLoading) {
+        return (
+            <NurseDashboardLayout>
+                <Loader />
+            </NurseDashboardLayout>
+        );
+    }
+
+    if (isNotificationsError || isTasksError) {
+        let errorMessage = "Error loading data.";
+        if (isNotificationsError) errorMessage += ` Notifications: ${(notificationsError as any)?.data?.message || "Unknown"}`;
+        if (isTasksError) errorMessage += ` Tasks: ${(tasksError as any)?.data?.message || "Unknown"}`;
+        return (
+            <NurseDashboardLayout>
+                <Title level={4} type="danger">{errorMessage}</Title>
+            </NurseDashboardLayout>
+        );
+    }
+
+    const totalPendingTasks = tasksData?.tasks?.filter(task => task.status === 'pending' || task.status === "in_progress").length || 0;
+
+    return (
+        <NurseDashboardLayout>
+            <Title level={3}>Nurse Dashboard</Title>
+            <Paragraph>Welcome, Nurse! Manage patient care, medications, and vitals here.</Paragraph>
+
+            <Row gutter={16}>
+         
+                <Col span={12}>
+                    <Link href="/dashboard/staff/nurse/task/my-task">
+                        <Card>
+                            <Statistic
+                                title="Pending / In progress Tasks"
+                                value={totalPendingTasks}
+                                prefix={<FileTextOutlined />}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+            </Row>
+
+            <Card
+                title={<><NotificationOutlined /> Recent Notifications</>}
+                style={{ marginTop: 16 }}
+                loading={isNotificationsLoading}
+            >
+                {isNotificationsError ? (
+                  <Text type="danger">Error loading notifications: { (notificationsError as any)?.data?.message || "An unexpected error occurred."}</Text>
+                ) : (
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={notificationsData?.notifications || []}
+                        renderItem={(item: Notification) => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    avatar={<Avatar icon={<NotificationOutlined />} />}
+                                    title={<Text>{item.message}</Text>}
+                                    description={<Text type="secondary">{formatDate(item.createdAt)}</Text>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                )}
+                <Button type="link" href="/dashboard/staff/nurse/notification/my-notification">View All Notifications</Button>
+            </Card>
+
+        </NurseDashboardLayout>
+    );
 };
 
 export default NurseDashboard;
@@ -2301,23 +2573,120 @@ const ReceptionistMyNotificationsPage = () => {
 export default ReceptionistMyNotificationsPage;
 
 ===== File: /src/app/dashboard/staff/receptionist/page.tsx =====
-// src/app/staff/receptionist/dashboard/page.tsx
+// src/app/dashboard/staff/receptionist/page.tsx
 'use client';
 
 import React from 'react';
-import { Typography } from 'antd';
+import { Typography, Card, Col, Row, Statistic, List, Avatar, Button } from 'antd';
 import ReceptionistDashboardLayout from '@/components/Layout/ReceptionistDashboardLayout';
+import { useAppSelector } from "@/store/store";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Loader from '@/components/Layout/Loader';
+import { NotificationOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
 
-const { Title } = Typography;
+//RTK Queries imports:
+import { useGetMyNotificationsQuery, Notification } from '@/services/notification/notificationSliceAPI';
+import { useGetPatientsQuery } from '@/services/patient/patientSliceAPI';
+import { useGetAppointmentsQuery } from '@/services/appointment/appointmentSliceAPI'; // Corrected import
+import { formatDate } from '@/utils/dateUtils';
+
+const { Title, Paragraph, Text } = Typography;
 
 const ReceptionistDashboard = () => {
-  return (
-    <ReceptionistDashboardLayout >
-      <Title level={3}>Receptionist Dashboard</Title>
-      <p>Welcome, Receptionist! Manage appointments, patient check-in, and billing here.</p>
-      {/* Add Receptionist-specific content here */}
-    </ReceptionistDashboardLayout>
-  );
+    const user = useAppSelector((state) => state.auth.user);
+    const router = useRouter();
+
+    //RTK Queries
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, error: notificationsError } = useGetMyNotificationsQuery({ limit: 5 });
+    const { data: patientsData, isLoading: isPatientsLoading, isError: isPatientsError, error: patientsError } = useGetPatientsQuery({});
+    const { data: appointmentsData, isLoading: isAppointmentsLoading, isError: isAppointmentsError, error: appointmentsError } = useGetAppointmentsQuery({}); // Fetch only 5 upcoming appointments
+
+    if (!user || user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "receptionist") {
+        router.push('/auth'); // Redirect to login if unauthorized
+        return null; // Or render an "Unauthorized" component
+    }
+
+    if (isNotificationsLoading || isPatientsLoading || isAppointmentsLoading) {
+        return (
+            <ReceptionistDashboardLayout>
+                <Loader />
+            </ReceptionistDashboardLayout>
+        );
+    }
+
+    if (isNotificationsError || isPatientsError || isAppointmentsError) {
+        let errorMessage = "Error loading data.";
+        if (isNotificationsError) errorMessage += ` Notifications: ${(notificationsError as any)?.data?.message || "Unknown"}`;
+        if (isPatientsError) errorMessage += ` Patients: ${(patientsError as any)?.data?.message || "Unknown"}`;
+        if (isAppointmentsError) errorMessage += ` Appointments: ${(appointmentsError as any)?.data?.message || "Unknown"}`;
+        return (
+            <ReceptionistDashboardLayout>
+                <Title level={4} type="danger">{errorMessage}</Title>
+            </ReceptionistDashboardLayout>
+        );
+    }
+
+    const totalPatients = patientsData?.totalPatients || 0;
+    const upcomingAppointments = appointmentsData?.appointments?.length || 0;
+
+    return (
+        <ReceptionistDashboardLayout>
+            <Title level={3}>Receptionist Dashboard</Title>
+            <Paragraph>Welcome, Receptionist! Manage appointments, patient check-in, and billing here.</Paragraph>
+
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Link href="/dashboard/staff/receptionist/patient">
+                        <Card>
+                            <Statistic
+                                title="Total Patients"
+                                value={totalPatients}
+                                prefix={<UserOutlined />}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+                <Col span={12}>
+                    <Link href="/dashboard/staff/receptionist/appointment">
+                        <Card>
+                            <Statistic
+                                title="Upcoming Appointments"
+                                value={upcomingAppointments}
+                                prefix={<CalendarOutlined />}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+            </Row>
+
+            <Card
+                title={<><NotificationOutlined /> Recent Notifications</>}
+                style={{ marginTop: 16 }}
+                loading={isNotificationsLoading}
+            >
+                {isNotificationsError ? (
+                    <Text type="danger">Error loading notifications: { (notificationsError as any)?.data?.message || "An unexpected error occurred."}</Text>
+                ) : (
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={notificationsData?.notifications || []}
+                        renderItem={(item: Notification) => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    avatar={<Avatar icon={<NotificationOutlined />} />}
+                                    title={<Text>{item.message}</Text>}
+                                    description={<Text type="secondary">{formatDate(item.createdAt)}</Text>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                )}
+                <Button type="link" href="/dashboard/staff/receptionist/notification/my-notification">View All Notifications</Button>
+            </Card>
+
+        </ReceptionistDashboardLayout>
+    );
 };
 
 export default ReceptionistDashboard;
@@ -3091,40 +3460,132 @@ export default SuperAdminMyNotificationsPage;
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Typography, message } from 'antd';
+import { Typography, Card, Col, Row, Statistic, message, List, Avatar, Button } from 'antd';
 import SuperAdminDashboardLayout from '@/components/Layout/SuperAdminDashboardLayout';
-import { useAppSelector } from "@/store/store";  
+import { useAppSelector } from "@/store/store";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Loader from '@/components/Layout/Loader';
+import { NotificationOutlined } from '@ant-design/icons';
 
-const { Title, Paragraph } = Typography;
+//RTK Queries imports:
+import { useGetStaffQuery } from '@/services/staff/staffSliceAPI';
+import { useGetPatientsQuery } from '@/services/patient/patientSliceAPI';
+import { useGetDepartmentsQuery } from '@/services/department/departmentSliceAPI';
+import { useGetMyNotificationsQuery, Notification } from '@/services/notification/notificationSliceAPI'; // Import the notification query
+import { formatDate } from '@/utils/dateUtils';
+
+const { Title, Paragraph, Text } = Typography;
 
 const SuperAdminAdminDashboard = () => {
-    const user = useAppSelector((state) => state.auth.user); // Get the logged-in user
+    const user = useAppSelector((state) => state.auth.user);
     const router = useRouter();
+    const [messageApi, contextHolder] = message.useMessage();
+
+    //RTK Queries to fetch counts
+    const { data: staffData, isLoading: isStaffLoading, isError: isStaffError, error: staffError } = useGetStaffQuery({});
+    const { data: patientsData, isLoading: isPatientsLoading, isError: isPatientsError, error: patientsError } = useGetPatientsQuery({});
+    const { data: departmentsData, isLoading: isDepartmentsLoading, isError: isDepartmentsError, error: departmentsError } = useGetDepartmentsQuery({});
+    const { data: notificationsData, isLoading: isNotificationsLoading, isError: isNotificationsError, error: notificationsError } = useGetMyNotificationsQuery({ limit: 5 }); // Get only the latest 5 notifications
 
     useEffect(() => {
-        // Basic role check - improve with fine-grained permissions later
         if (!user || (user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "super admin")) {
-            message.error("You are not authorized to view this page.");
-            router.push('/auth'); // Redirect to login or unauthorized page
+            messageApi.error("You are not authorized to view this page.");
+            router.push('/auth');
         }
     }, [user, router]);
 
-    // If the user is not authorized, don't render the dashboard
-    if (!user || (user.userType !== "Staff" || user.role?.name?.toLowerCase() !== "super admin")) {
-        return null; // Or render an "unauthorized" component
+    if (isStaffLoading || isPatientsLoading || isDepartmentsLoading || isNotificationsLoading) {
+        return (
+            <SuperAdminDashboardLayout>
+                <Loader />
+            </SuperAdminDashboardLayout>
+        );
     }
 
-    return (
-        <SuperAdminDashboardLayout >
-            <Title level={3}>Admin Dashboard</Title>
-            <p>Welcome, Admin! Here's an overview of the system:</p>
+    if (isStaffError || isPatientsError || isDepartmentsError || isNotificationsError) {
+        let errorMessage = "Error loading data.";
+        if (isStaffError) errorMessage += ` Staff: ${ (staffError as any)?.data?.message || "Unknown"}`;
+        if (isPatientsError) errorMessage += ` Patients: ${ (patientsError as any)?.data?.message || "Unknown"}`;
+        if (isDepartmentsError) errorMessage += ` Departments: ${ (departmentsError as any)?.data?.message || "Unknown"}`;
+        if (isNotificationsError) errorMessage += ` Notifications: ${ (notificationsError as any)?.data?.message || "Unknown"}`;
 
-            {/* Display some placeholder stats */}
-            <Title level={4}>System Statistics</Title>
-            <Paragraph>Total Users: [Fetch total users from backend]</Paragraph>
-            <Paragraph>Total Patients: [Fetch total patients from backend]</Paragraph>
-            <Paragraph>Total Staff: [Fetch total staff from backend]</Paragraph>
+        return (
+            <SuperAdminDashboardLayout>
+                {contextHolder}
+                <Title level={4} type="danger">{errorMessage}</Title>
+            </SuperAdminDashboardLayout>
+        );
+    }
+
+    const totalStaff = staffData?.totalStaff || 0;
+    const totalPatients = patientsData?.totalPatients || 0;
+    const totalDepartments = departmentsData?.totalDepartments || 0;
+
+    return (
+        <SuperAdminDashboardLayout>
+            {contextHolder}
+            <Title level={3}>Super Admin Dashboard</Title>
+            <Paragraph>Welcome, Super Admin! Here's an overview of the system:</Paragraph>
+
+            <Row gutter={16}>
+                <Col span={8}>
+                    <Link href="/dashboard/staff/super-admin/staff">
+                        <Card>
+                            <Statistic
+                                title="Total Staff"
+                                value={totalStaff}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+                <Col span={8}>
+                    <Link href="/dashboard/staff/super-admin/patient">
+                        <Card>
+                            <Statistic
+                                title="Total Patients"
+                                value={totalPatients}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+                <Col span={8}>
+                    <Link href="/dashboard/staff/super-admin/department">
+                        <Card>
+                            <Statistic
+                                title="Total Departments"
+                                value={totalDepartments}
+                            />
+                        </Card>
+                    </Link>
+                </Col>
+            </Row>
+
+            <Card
+                title={<><NotificationOutlined /> Recent Notifications</>}
+                style={{ marginTop: 16 }}
+                loading={isNotificationsLoading}
+            >
+                {isNotificationsError ? (
+                     <Text type="danger">Error loading notifications:  { (notificationsError as any)?.data?.message || "An unexpected error occurred."}</Text>
+                ) : (
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={notificationsData?.notifications || []}
+                        renderItem={(item: Notification) => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    avatar={<Avatar icon={<NotificationOutlined />} />}
+                                    title={<Text>{item.message}</Text>}
+                                    description={<Text type="secondary">{formatDate(item.createdAt)}</Text>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                )}
+                <Button type="link" href="/dashboard/staff/super-admin/notification/my-notification">View All Notifications</Button>
+            </Card>
+
         </SuperAdminDashboardLayout>
     );
 };
@@ -6017,17 +6478,17 @@ export default AppFooter;
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu, Badge, message } from 'antd'; // Import message
+import { Layout, Typography, Button, Space, Avatar, Dropdown, Menu, Badge, message } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
-import { UserOutlined, BellOutlined } from '@ant-design/icons'; // Import BellOutlined
+import { UserOutlined, BellOutlined } from '@ant-design/icons';
 import { useLogoutMutation } from '@/services/auth/authSliceAPI';
 import { persistor } from '@/store/store';
 import { logout } from '@/services/auth/authSlice';
 import Link from 'next/link';
-import { useGetMyNotificationsQuery } from '@/services/notification/notificationSliceAPI'; // Import the notification query
+import { useGetMyNotificationsQuery } from '@/services/notification/notificationSliceAPI';   
 import type { Notification as NotificationType } from '@/services/notification/notificationSliceAPI'; // Import API Notification Type
-import { getSocket } from '@/services/socket/socket'; // Import your socket instance
+import { getSocket } from '@/services/socket/socket'; 
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -6036,7 +6497,7 @@ const AppHeader: React.FC = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const user = useAppSelector((state) => state.auth.user);
-    const token = useAppSelector((state) => state.auth.token); // Get Token from Redux store
+    const token = useAppSelector((state) => state.auth.token);  
     const [logoutMutation, { isLoading }] = useLogoutMutation();
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -6069,7 +6530,7 @@ const AppHeader: React.FC = () => {
             } else if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        new window.Notification(notification.message, {  // Correct to Window.Notification
+                        new window.Notification(notification.message, {  
                             body: `Type: ${notification.type}, Priority: ${notification.priority}`,
                             icon: '/icon.png',
                         });
@@ -6085,7 +6546,7 @@ const AppHeader: React.FC = () => {
             //Fetch the socket
             const socket = getSocket()
 
-            socket.auth = (cb) => {
+            socket.auth = (cb:any) => {
                 cb({ token: token });
             };
 
@@ -6145,9 +6606,9 @@ const AppHeader: React.FC = () => {
             persistor.purge();
 
             // 4. Redirect to the login page
-            router.push('/auth');
+            window.location.href = '/auth'; // Full page reload
         } catch (error: any) {
-            console.error('Logout failed:', error.message || error.error);
+            console.error('Logout failed:', error.data.message || error.error);
             // Handle logout error (e.g., display an error message)
         }
     };
@@ -6157,7 +6618,7 @@ const AppHeader: React.FC = () => {
             key: 'logout',
             label: 'Logout',
             onClick: handleLogout,
-            loading: isLoading,
+            loading: isLoading ? true : undefined, //Conditional rendering for the menu items
         },
     ];
 
@@ -6183,9 +6644,7 @@ const AppHeader: React.FC = () => {
             {user ? (
                <Space align="center">
                <Badge count={unreadCount}>
-                   <Dropdown menu={menu} placement="bottomRight" arrow>
-                       <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
-                   </Dropdown>
+                    <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
                </Badge>
                <Text>
                    {user.firstName} {user.lastName} ({user.userType})
@@ -11505,11 +11964,11 @@ export interface Patient {
   lastName: string;
   email: string;
   phone: string;
-  dob: string; // Assuming string, adjust if Date
+  dob: string;  
   address: string;
   gender: string;
   userType: "Patient";
-  patientRole: { _id: string; name: string }; 
+  role: { _id: string; name: string };  
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -11536,8 +11995,8 @@ export interface PatientUpdateRequest {
 }
 
 export interface GetPatientsParams {
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
   search?: string;
 }
 
@@ -12097,8 +12556,8 @@ export interface Staff {
   gender: string;
   userType: "Staff";
   isActive: boolean;
-  role: { _id: string; name: string }; // Update role type
-  department: { _id: string; name: string }; // Update department type
+  role: { _id: string; name: string };  
+  department: { _id: string; name: string };  
   createdAt: string;
   updatedAt: string;
 }

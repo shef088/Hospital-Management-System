@@ -4,8 +4,8 @@
 import React from 'react';
 import { useLoginMutation } from '@/services/auth/authSliceAPI';
 import { useRouter } from 'next/navigation';
-import { Form, Input, Button, Typography, Alert, message } from 'antd'; // Import message
-import { LockOutlined, MailOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Typography, Alert, message } from 'antd';
+import { LockOutlined, MailOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import Link from 'next/link';
 import { useAppDispatch } from '@/store/store';
 import logger from "@/utils/logger";
@@ -22,20 +22,20 @@ const StaffLoginForm: React.FC = () => {
         try {
             const response = await login(values).unwrap();
             logger.silly("response::", response)
-    
+
             if (response.user.userType !== "Staff" || !response.user.role) {
                 message.error("Login failed: Invalid user type or staff role. Please contact support.");
                 return; // Early return for non-staff users
             }
-    
+
             if (typeof response.user.role.name !== 'string') {
                 console.warn('role.name is not a string:', response.user.role);
                 message.error("Login failed: Invalid staff role name. Please contact support.");
                 return; // Prevent further execution if role.name is not a string
             }
-    
+
             const roleName = response.user.role.name.toLowerCase();
-    
+
             switch (roleName) {
                 case "super admin":
                     router.push(`/dashboard/staff/super-admin`);
@@ -47,7 +47,7 @@ const StaffLoginForm: React.FC = () => {
                     router.push(`/dashboard/staff/${roleName}`);
                     break;
             }
-    
+
         } catch (err: any) {
             console.error('Staff Login failed:', err.data.message || err.error);
             message.error(`Staff Login failed: ${err.data.message || err.error || "Unknown error."}`); // Show error message
@@ -74,10 +74,11 @@ const StaffLoginForm: React.FC = () => {
                     name="password"
                     rules={[{ required: true, message: 'Please enter your password!' }]}
                 >
-                    <Input
+                    <Input.Password
                         prefix={<LockOutlined className="site-form-item-icon" />}
-                        type="password"
+                         type="password"
                         placeholder="Password"
+                       visibilityToggle
                     />
                 </Form.Item>
                 <Form.Item>

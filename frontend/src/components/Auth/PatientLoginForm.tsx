@@ -5,7 +5,7 @@ import React from 'react';
 import { useLoginMutation } from '@/services/auth/authSliceAPI';
 import { useRouter } from 'next/navigation';
 import { Form, Input, Button, Typography, Alert } from 'antd';
-import { LockOutlined, MailOutlined } from '@ant-design/icons';
+import { LockOutlined, MailOutlined} from '@ant-design/icons';
 import { useAppDispatch } from '@/store/store';
 import Link from 'next/link';
 import logger from "@/utils/logger1"
@@ -26,9 +26,10 @@ const PatientLoginForm: React.FC = () => {
                 // Construct the dashboard route for patients
                 const dashboardRoute = `/dashboard/patient`; // Direct route to patient dashboard
                 router.push(dashboardRoute);
+                
 
             } else {
-                console.warn('Unexpected user type:', response.user.userType);
+                logger.warn('Unexpected user type:', response.user.userType);
                 // Optionally, redirect to a default dashboard or display an error message
                 // router.push('/default-dashboard');
             }
@@ -58,10 +59,11 @@ const PatientLoginForm: React.FC = () => {
                     name="password"
                     rules={[{ required: true, message: 'Please enter your password!' }]}
                 >
-                    <Input
+                    <Input.Password
                         prefix={<LockOutlined className="site-form-item-icon" />}
                         type="password"
                         placeholder="Password"
+                         visibilityToggle
                     />
                 </Form.Item>
                 <Form.Item>
