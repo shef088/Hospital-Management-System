@@ -83,9 +83,9 @@ const getAllMedicalRecords = async (req, res) => {
     const staff = await Staff.findById(req.user.id).populate("role");
 
     // Role-based access control
-    if (staff.role.name === "Doctor") {
+    if (req.user.role.name === "Doctor") {
       filter.doctor = req.user.id; // Doctors only see their own patients' records
-    } else if (staff.role.name === "Nurse") {
+    } else if (req.user.role.name === "Nurse") {
       // filter.department = staff.department; // Nurses can view records in their department
     } else if (req.user.role.name === "Patient") {
       filter.patient = req.user.id; // Patients only see their own records

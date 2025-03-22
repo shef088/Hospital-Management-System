@@ -167,9 +167,9 @@ const getAllAppointments = async (req, res) => {
     const staff = await Staff.findById(req.user.id).populate("role");
 
     // Role-based filtering
-    if (staff.role.name === "Doctor") {
+    if (req.user.role.name === "Doctor") {
       filter.doctor = req.user.id;
-    } else if (["Receptionist", "Nurse"].includes(staff.role.name)) {
+    } else if (["Receptionist", "Nurse"].includes(req.user.role.name)) {
       filter.department = staff.department;
     } else if (req.user.role.name === "Patient") {
       filter.patient = req.user.id;
