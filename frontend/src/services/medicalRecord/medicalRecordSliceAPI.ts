@@ -57,6 +57,10 @@ interface GetMedicalRecordsResponse {
   totalPages: number;
 }
 
+interface MedicalSummaryResponse {
+  summary: string;
+}
+
 export const medicalRecordApi = createApi({
   reducerPath: "medicalRecordApi",
   baseQuery: fetchBaseQuery({
@@ -115,6 +119,9 @@ export const medicalRecordApi = createApi({
       query: (id) => `medical-records/${id}`,
       providesTags: (result, error, id) => [{ type: 'MedicalRecord', id }],
     }),
+    getMedicalSummary: builder.query<MedicalSummaryResponse, string>({
+      query: (patientId) => `medical-records/${patientId}/summary`,
+  }),
   }),
 });
 
@@ -124,4 +131,5 @@ export const {
   useUpdateMedicalRecordMutation,
   useDeleteMedicalRecordMutation,
   useGetMedicalRecordByIdQuery,
+  useGetMedicalSummaryQuery
 } = medicalRecordApi;

@@ -136,6 +136,7 @@ const getMedicalSummary = async (req, res) => {
   try {
     const { patientId } = req.params;
     const summary = await generateMedicalSummary(patientId);
+    console.log("ai summary::", summary)
     res.status(200).json({ summary });
   } catch (error) {
     console.error("Medical Summary Error:", error);
