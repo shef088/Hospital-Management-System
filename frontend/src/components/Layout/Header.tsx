@@ -10,9 +10,9 @@ import { useLogoutMutation } from '@/services/auth/authSliceAPI';
 import { persistor } from '@/store/store';
 import { logout } from '@/services/auth/authSlice';
 import Link from 'next/link';
-import { useGetMyNotificationsQuery } from '@/services/notification/notificationSliceAPI'; // Import the notification query
+import { useGetMyNotificationsQuery } from '@/services/notification/notificationSliceAPI';   
 import type { Notification as NotificationType } from '@/services/notification/notificationSliceAPI'; // Import API Notification Type
-import { getSocket } from '@/services/socket/socket'; // Import your socket instance
+import { getSocket } from '@/services/socket/socket'; 
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -21,7 +21,7 @@ const AppHeader: React.FC = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const user = useAppSelector((state) => state.auth.user);
-    const token = useAppSelector((state) => state.auth.token); // Get Token from Redux store
+    const token = useAppSelector((state) => state.auth.token);  
     const [logoutMutation, { isLoading }] = useLogoutMutation();
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -54,7 +54,7 @@ const AppHeader: React.FC = () => {
             } else if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        new window.Notification(notification.message, {  // Correct to Window.Notification
+                        new window.Notification(notification.message, {  
                             body: `Type: ${notification.type}, Priority: ${notification.priority}`,
                             icon: '/icon.png',
                         });
@@ -130,7 +130,7 @@ const AppHeader: React.FC = () => {
             persistor.purge();
 
             // 4. Redirect to the login page
-            router.push('/auth');
+            window.location.href = '/auth'; // Full page reload
         } catch (error: any) {
             console.error('Logout failed:', error.message || error.error);
             // Handle logout error (e.g., display an error message)
@@ -142,7 +142,7 @@ const AppHeader: React.FC = () => {
             key: 'logout',
             label: 'Logout',
             onClick: handleLogout,
-            loading: isLoading,
+            loading: isLoading ? true : undefined, //Conditional rendering for the menu items
         },
     ];
 
@@ -168,9 +168,7 @@ const AppHeader: React.FC = () => {
             {user ? (
                <Space align="center">
                <Badge count={unreadCount}>
-                   <Dropdown  placement="bottomRight" arrow>
-                       <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
-                   </Dropdown>
+                    <Avatar icon={<BellOutlined />} style={{ cursor: 'pointer' }} />
                </Badge>
                <Text>
                    {user.firstName} {user.lastName} ({user.userType})
