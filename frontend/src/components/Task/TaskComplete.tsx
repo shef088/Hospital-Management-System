@@ -6,6 +6,7 @@ import { Button, message } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import { useCompleteTaskMutation, Task } from '@/services/task/taskSliceAPI';
 import { useAppSelector } from '@/store/store';
+import logger from '@/utils/logger';
 
 interface TaskCompleteProps {
     task: Task;
@@ -21,6 +22,7 @@ const TaskComplete: React.FC<TaskCompleteProps> = ({ task, onSuccess }) => {
     const isCreatedByUser = user?._id === task.createdBy._id;
 
     const handleComplete = async () => {
+        logger.silly("in complete task")
         try {
             await completeTask(task._id).unwrap();
             messageApi.success('Task completed successfully!');
