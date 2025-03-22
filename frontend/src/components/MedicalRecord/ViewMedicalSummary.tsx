@@ -1,31 +1,83 @@
 // src/components/MedicalRecord/ViewMedicalSummary.tsx
 'use client';
 
-import React from 'react';
-import { Typography, Card,  Alert } from 'antd';
-import { useGetMedicalSummaryQuery,  MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
-import Loader from '@/components/Layout/Loader';
+import React, { useEffect } from 'react';
+import { Typography, Card, Alert, Button, Spin } from 'antd';
+import { useGetMedicalSummaryQuery, MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
+import { ReloadOutlined } from '@ant-design/icons';
 
 interface ViewMedicalSummaryProps {
-     record: MedicalRecord;
+    record: MedicalRecord;
 }
 
 const ViewMedicalSummary: React.FC<ViewMedicalSummaryProps> = ({ record }) => {
-    const { data: summaryData, isLoading, isError, error } = useGetMedicalSummaryQuery(record.patient._id);
- 
-     if (isLoading) return <Loader />;
-        if (isError) return <p>Error fetching medical records summary: { (error as any)?.data?.message || "An unexpected error occurred."}</p>;
-    
+    const { data: summaryData, isLoading, isError, error, refetch } = useGetMedicalSummaryQuery(record.patient._id);
 
+    // Auto-refetch whenever the record (patient ID) changes
+    useEffect(() => {
+        refetch();
+    }, [record.patient._id, refetch]);
+
+    const handleRefresh = () => {
+        refetch();
+    };
+
+    if (isLoading) {
+        return (
+            <Card title="🩺 AI-Generated Medical Summary">
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Spin size="large" />
+                    <Typography.Paragraph>Generating medical summary...</Typography.Paragraph>
+                </div>
+            </Card>
+        );
+    }
+
+    if (isError) {
+        return <Alert message="Error fetching medical records summary" description={(error as any)?.data?.message || "An unexpected error occurred."} type="error" showIcon />;
+    }
+    
     if (!summaryData || !summaryData.summary) {
         return <Alert message="No medical summary available for this patient." type="info" showIcon />;
     }
 
+    // Convert the AI-generated summary into readable JSX
+    const formattedSummary = summaryData.summary
+        .split("\n\n") // Split by double line breaks to separate sections
+        .map((section, index) => {
+            // Check if the section is a numbered header (e.g., "1. Concise Medical Summary")
+            const match = section.match(/^(\d+)\.\s(.+)$/);
+            if (match) {
+                return <Typography.Title key={index} level={5}>{`📌 ${match[1]}. ${match[2]}`}</Typography.Title>;
+            }
+
+            // Convert bullet points into list items
+            if (section.includes("* ")) {
+                const bulletPoints = section
+                    .split("\n") // Split lines
+                    .filter((line) => line.trim().startsWith("*")) // Only keep bullet points
+                    .map((line, i) => <li key={i}>{line.replace("* ", "").trim()}</li>);
+
+                return <ul key={index}>{bulletPoints}</ul>;
+            }
+
+            // Default case: Render as a paragraph
+            return <Typography.Paragraph key={index}>{section}</Typography.Paragraph>;
+        });
+
     return (
-        <Card title={<Typography.Title level={4}>Medical Summary</Typography.Title>}>
-            <Typography.Paragraph>
-                {summaryData.summary}
-            </Typography.Paragraph>
+        <Card
+            title={
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography.Title level={4}>🩺 AI-Generated Medical Summary</Typography.Title>
+                    <Button icon={<ReloadOutlined />} onClick={handleRefresh} size="small" loading={isLoading}>
+                        Refresh
+                    </Button>
+                </div>
+            }
+        >
+            {formattedSummary}
+            
         </Card>
     );
 };
