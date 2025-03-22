@@ -1,0 +1,1 @@
+export const BASE_URL = "https://cuddly-cod-vgj4q4x4r66cpj97-5000.app.github.dev"
