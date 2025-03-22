@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useGetMedicalRecordsQuery } from '@/services/medicalRecord/medicalRecordSliceAPI';
 import { Table, Button, Space, Input } from 'antd';
 import { MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
-import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined  } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined, FileTextOutlined  } from '@ant-design/icons';
 import Loader from "@/components/Layout/Loader"
 import dayjs from 'dayjs'; 
 
@@ -23,7 +23,7 @@ const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, o
     const { data: medicalRecordData, isLoading, isError: isGetMedicalRecordsError, error: getMedicalRecordsError } = useGetMedicalRecordsQuery({
         page: currentPage,
         limit: pageSize,
-        search: searchTerm,
+        search: searchTerm, 
     });
 
     const totalMedicalRecordsCount = medicalRecordData?.totalRecords || 0;
@@ -46,13 +46,25 @@ const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, o
             title: 'Patient',
             dataIndex: 'patient',
             key: 'patient',
-            render: (patient: { firstName: string; lastName: string }) => `${patient.firstName} ${patient.lastName}`,
+            render: (patient: { firstName: string; lastName: string } | null | undefined) => {
+                if (patient && patient.firstName && patient.lastName) {
+                    return `${patient.firstName} ${patient.lastName}`;
+                } else {
+                    return 'N/A';  
+                }
+            },
         },
         {
             title: 'Doctor',
             dataIndex: 'doctor',
             key: 'doctor',
-            render: (doctor: { firstName: string; lastName: string }) => `${doctor.firstName} ${doctor.lastName}`,
+            render: (doctor: { firstName: string; lastName: string } | null | undefined) => {
+                if (doctor && doctor.firstName && doctor.lastName) {
+                    return `${doctor.firstName} ${doctor.lastName}`;
+                } else {
+                    return 'N/A'; // Or another suitable placeholder
+                }
+            },
         },
         {
             title: 'Diagnosis',
@@ -92,7 +104,7 @@ const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, o
                                        </Button>
                                    )}
                                     {onSummary && (
-                                       <Button danger icon={<DeleteOutlined />} onClick={() => onSummary(record)}>
+                                       <Button danger icon={<FileTextOutlined />} onClick={() => onSummary(record)}>
                                            AI summary
                                        </Button>
                                    )}

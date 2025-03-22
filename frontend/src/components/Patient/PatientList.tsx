@@ -5,16 +5,17 @@ import React, { useState } from 'react';
 import { useGetPatientsQuery } from '@/services/patient/patientSliceAPI';
 import { Table, Button, Space, Input } from 'antd';
 import { Patient } from '@/services/patient/types';
-import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined, FileTextOutlined } from '@ant-design/icons';
 import Loader from "@/components/Layout/Loader";
 
 interface PatientListProps {
     onView?: (patient: Patient) => void;
     onEdit?: (patient: Patient) => void;
     onDelete?: (patient: Patient) => void; 
+    onSummary?: (record: MedicalRecord) => void; 
 }
 
-const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete }) => {
+const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete, onSummary }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [searchTerm, setSearchTerm] = useState('');
@@ -76,6 +77,11 @@ const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete }) =
                                              Delete
                                          </Button>
                                      )}
+                                    {onSummary && (
+                                            <Button icon={<FileTextOutlined />} onClick={() => onSummary(record)}>
+                                            AI summary
+                                            </Button>
+                                        )}
                                  </Space>
             ),
         },

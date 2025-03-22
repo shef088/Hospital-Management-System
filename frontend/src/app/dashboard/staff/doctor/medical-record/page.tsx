@@ -34,11 +34,7 @@ const DoctorMedicalRecordManagementPage = () => {
         setIsViewModalVisible(true);
     };
 
-    const handleViewSummary = (record: MedicalRecord) => {
-        setSelectedMedicalRecord(record);
-        setIsViewSummaryModalVisible(true);
-    };
-
+  x
     const handleCreateSuccess = () => {
         setIsCreateModalVisible(false);
     };
