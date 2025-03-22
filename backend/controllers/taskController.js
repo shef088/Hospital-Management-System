@@ -1,4 +1,6 @@
 const Task = require("../models/Task");
+const Staff = require("../models/Staff");
+const Role = require("../models/Role");
 const checkPermission = require("../middlewares/checkPermission");
 const { sendNotification } = require("../services/notificationService");
 
@@ -32,18 +34,24 @@ const createTask = async (req, res) => {
         return res.status(400).json({ message: "Doctor does not belong to any department." });
       }
 
-      // Find an available Nurse in the same department
-      const nurse = await Staff.findOne({
-        role: "Nurse",
-        department: doctor.department._id,
-        isActive: true,
-      }).sort({ tasksAssigned: 1 }); // Assign to the least busy nurse
+    // Get the Nurse role ID
+const nurseRole = await Role.findOne({ name: "Nurse" });  
+if (!nurseRole) {
+  return res.status(500).json({ message: "Nurse role not found." });
+}
 
-      if (!nurse) {
-        return res.status(404).json({ message: "No available nurses in this department." });
-      }
+  // Find an available Nurse in the same department
+  const nurse = await Staff.findOne({
+    role: nurseRole._id,  
+    department: doctor.department._id,
+    isActive: true,
+  }).sort({ tasksAssigned: 1 }); // Assign to the least busy nurse
 
-      finalAssignedTo = nurse._id; // Assign task to this nurse
+  if (!nurse) {
+    return res.status(404).json({ message: "No available nurses in this department." });
+  }
+
+  finalAssignedTo = nurse._id; // ✅ Assign task to this nurse
     
 
     // ✅ Create the Task

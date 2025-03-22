@@ -33,7 +33,7 @@ const corsOptions = {
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "http://[::1]:3000",
-    "https://cuddly-cod-vgj4q4x4r66cpj97-3000.app.github.dev"
+    "https://didactic-couscous-g476qrwr9p5jhgp9-3000.app.github.dev"
   ],
   credentials: true,
   preflightContinue: false,
