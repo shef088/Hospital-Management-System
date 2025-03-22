@@ -13,9 +13,10 @@ interface MedicalRecordListProps {
     onView?: (record: MedicalRecord) => void;
     onEdit?: (record: MedicalRecord) => void;
     onDelete?: (record: MedicalRecord) => void;  
+    onSummary?: (record: MedicalRecord) => void; 
 }
 
-const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, onDelete }) => {
+const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, onDelete, onSummary }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [searchTerm, setSearchTerm] = useState('');
@@ -88,6 +89,11 @@ const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, o
                                    {onDelete && (
                                        <Button danger icon={<DeleteOutlined />} onClick={() => onDelete(record)}>
                                            Delete
+                                       </Button>
+                                   )}
+                                    {onSummary && (
+                                       <Button danger icon={<DeleteOutlined />} onClick={() => onSummary(record)}>
+                                           AI summary
                                        </Button>
                                    )}
                                </Space>
