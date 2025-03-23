@@ -6,6 +6,11 @@
 
 This Hospital Management System (HMS) is a comprehensive software solution designed to streamline and automate various administrative, financial, and clinical processes within a hospital. Built from scratch for the StackUp Coding Challenge, this HMS aims to improve efficiency, reduce errors, and enhance the overall patient experience.
 
+## 📽 Video Demo
+
+[![Watch the demo](./Demo.mp4)
+ 
+ 
 ## AI Integrations
 
 This HMS incorporates AI to enhance efficiency and decision-making:
@@ -54,9 +59,8 @@ This HMS incorporates AI to enhance efficiency and decision-making:
     *   Track all changes to records and access in the system.
 
 
-## Video Demo
 
-[Link to your video demo on YouTube, Loom, or similar.]
+
 
 ## Technologies Used
 
