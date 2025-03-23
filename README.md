@@ -124,6 +124,8 @@ Provide detailed, step-by-step instructions for setting up the project. Be very 
 
 5. **Database Seeding (Very Important):**
     * This process is crucial for the app to work. So dont skip this step.
+    * The seeder contains the default email and password for  superuser account which can be then used to create staff or patient accounts on the dashboard.
+    *All patient/Staff created later by superadmin on the superadmin dashboard have their password same as their email address. They can later change it through the password reset page one they login.
     * To seed the database with initial data (roles, permissions, departments, and a super admin user), run the seeder script:
 
 ```bash
