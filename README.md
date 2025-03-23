@@ -88,7 +88,7 @@ Provide detailed, step-by-step instructions for setting up the project. Be very 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/shef088/hos
+    git clone https://github.com/shef088/Hospital-Management-System
     cd /backend
     ```
 
