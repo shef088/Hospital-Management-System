@@ -8,7 +8,9 @@ This Hospital Management System (HMS) is a comprehensive software solution desig
 
 ## 📽 Video Demo
 
-[![Watch the demo](./Demo.mp4)
+- [Watch the demo (GitHub)](./Demo.mp4)  
+- [Watch the demo (YouTube)](https://youtu.be/4-54sQvv3c0)
+
  
 
 ## AI Integrations
