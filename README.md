@@ -10,7 +10,7 @@ This Hospital Management System (HMS) is a comprehensive software solution desig
 
 [![Watch the demo](./Demo.mp4)
  
- 
+
 ## AI Integrations
 
 This HMS incorporates AI to enhance efficiency and decision-making:
@@ -179,7 +179,7 @@ node seeder.js
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Team Members
-Rudy Travis 
-Discord Handle: rudy77_
-X Handle:  @Rudy00243322
+* Rudy Travis 
+* Discord Handle: rudy77_
+* X Handle:  @Rudy00243322
  
