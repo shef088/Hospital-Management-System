@@ -169,14 +169,13 @@ node seeder.js
     * This will start the development server on `http://localhost:3000` (or the default Next.js port).
 
 
-## Contributing
-This project was built from scratch for the StackUp Coding Challenge. Contributions are not currently being accepted.
+ 
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Team Members
 Rudy Travis 
-Discord  Handle: rudy77_
+Discord Handle: rudy77_
 X Handle:  @Rudy00243322
  
