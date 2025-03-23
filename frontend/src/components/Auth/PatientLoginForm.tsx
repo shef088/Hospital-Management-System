@@ -71,9 +71,7 @@ const PatientLoginForm: React.FC = () => {
                         {isLoading ? 'Logging In...' : 'Login'}
                     </Button>
                 </Form.Item>
-                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                    Don't have an account? <Link href="/auth/patient/register">Sign Up</Link>
-                </div>
+               
             </Form>
         </div>
     );

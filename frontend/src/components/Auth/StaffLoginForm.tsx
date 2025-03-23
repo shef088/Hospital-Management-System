@@ -86,9 +86,7 @@ const StaffLoginForm: React.FC = () => {
                         {isLoading ? 'Logging In...' : 'Login'}
                     </Button>
                 </Form.Item>
-                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                    Don't have an account? <Link href="/auth/staff/register/admin">Sign Up</Link>
-                </div>
+                
             </Form>
         </div>
     );
