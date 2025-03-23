@@ -176,11 +176,7 @@ This project was built from scratch for the StackUp Coding Challenge. Contributi
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Team Members
-[Your Name] - [Your Discord/X Handle]
-
-[Team Member 2 Name (if applicable)] - [Team Member 2 Discord/X Handle]
-
-[Team Member 3 Name (if applicable)] - [Team Member 3 Discord/X Handle]
-
-Contact
-For any questions or inquiries, please contact: [Your Email Address]
+Rudy Travis 
+Discord  Handle: rudy77_
+X Handle:  @Rudy00243322
+ 
