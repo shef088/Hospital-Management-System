@@ -170,13 +170,13 @@ const getAllAppointments = async (req, res) => {
     const skip = (page - 1) * limit;
 
     let filter = {};
-    const staff = await Staff.findById(req.user.id).populate("role");
+    ;
 
     // Role-based filtering
     if (req.user.role.name === "Doctor") {
       filter.doctor = req.user.id;
-    } else if (["Receptionist", "Nurse"].includes(req.user.role.name)) {
-      filter.department = staff.department;
+    } else if (req.user.role.name === "Patient") {
+      filter.assignedTo = req.user.id;
     } else if (req.user.role.name === "Patient") {
       filter.patient = req.user.id;
     }
@@ -184,7 +184,7 @@ const getAllAppointments = async (req, res) => {
     // Apply search filtering (date, patient name, doctor name)
     if (search) {
       filter.$or = [
-        { date: { $regex: search, $options: "i" } }, // Search by date
+         
         { "patient.firstName": { $regex: search, $options: "i" } }, // Patient name
         { "patient.lastName": { $regex: search, $options: "i" } },
         { "doctor.firstName": { $regex: search, $options: "i" } }, // Doctor name

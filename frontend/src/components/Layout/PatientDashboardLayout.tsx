@@ -87,7 +87,7 @@ const PatientDashboardLayout: React.FC<PatientDashboardLayoutProps> = ({ childre
                     <Menu
                         mode="inline"
                         defaultSelectedKeys={['1']}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                         selectedKeys={[selectedKey()]}

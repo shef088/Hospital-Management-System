@@ -101,7 +101,7 @@ const ReceptionistDashboardLayout: React.FC<ReceptionistDashboardLayoutProps> = 
                     <Menu
                         mode="inline"
                         selectedKeys={[selectedKey]}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                     />
