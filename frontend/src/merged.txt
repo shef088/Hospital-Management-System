@@ -1574,6 +1574,7 @@ import MedicalRecordEditForm from '@/components/MedicalRecord/MedicalRecordEditF
 import MedicalRecordView from '@/components/MedicalRecord/MedicalRecordView';
 import { MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
 
+
 const { Title } = Typography;
 
 const DoctorMedicalRecordManagementPage = () => {
@@ -1595,7 +1596,7 @@ const DoctorMedicalRecordManagementPage = () => {
         setSelectedMedicalRecord(record);
         setIsViewModalVisible(true);
     };
-
+ 
     const handleCreateSuccess = () => {
         setIsCreateModalVisible(false);
     };
@@ -1619,7 +1620,7 @@ const DoctorMedicalRecordManagementPage = () => {
                 Create Medical Record
             </Button>
 
-            <MedicalRecordList onView={handleView} onEdit={handleEdit} />
+            <MedicalRecordList onView={handleView} onEdit={handleEdit}  />
 
             <Modal
                 title="Create Medical Record"
@@ -1655,6 +1656,8 @@ const DoctorMedicalRecordManagementPage = () => {
                       <MedicalRecordView record={selectedMedicalRecord} />
                   )}
               </Modal>
+
+             
         </DoctorDashboardLayout>
     );
 };
@@ -1813,16 +1816,26 @@ import DoctorDashboardLayout from '@/components/Layout/DoctorDashboardLayout';
 import PatientList from '@/components/Patient/PatientList';
 import PatientView from '@/components/Patient/PatientView';  
 import { Patient } from '@/services/patient/types';
+import ViewMedicalSummary from '@/components/MedicalRecord/ViewMedicalSummary';
 
 const { Title } = Typography;
 
 const DoctorPatientManagementPage = () => {   
     const [isViewModalVisible, setIsViewModalVisible] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [isViewSummaryModalVisible, setIsViewSummaryModalVisible] = useState(false);
 
     const handleView = (patient: Patient) => {
         setSelectedPatient(patient);
         setIsViewModalVisible(true);
+    };
+    const handleViewSummary = (patient: Patient) => {
+        setSelectedPatient(patient);
+        setIsViewSummaryModalVisible(true);
+    };
+    const handleSummaryCancel = () => {
+        setIsViewSummaryModalVisible(false);
+        setSelectedPatient(null);
     };
 
     return (
@@ -1832,7 +1845,7 @@ const DoctorPatientManagementPage = () => {
                 <p>View patients your assigned patients here.</p>
 
                 <PatientList
-                    onView={handleView}
+                    onView={handleView} onSummary={handleViewSummary}
                 />
                 <Modal
                     title="View Patient"
@@ -1844,6 +1857,16 @@ const DoctorPatientManagementPage = () => {
                         <PatientView patient={selectedPatient} />
                     )}
                 </Modal>
+                <Modal
+                title="View Medical Record Summary"
+                open={isViewSummaryModalVisible}
+                onCancel={handleSummaryCancel}
+                footer={null}
+              >
+                  {selectedPatient && (
+                      <ViewMedicalSummary  patient={selectedPatient} />
+                  )}
+              </Modal>
 
             </DoctorDashboardLayout>
         </>
@@ -4859,7 +4882,13 @@ const AppointmentCreateForm: React.FC<AppointmentCreateFormProps> = ({ onSuccess
                         }))}
                     />
                 </Form.Item>
-
+                <Form.Item
+                    name="autoAssignDoctor"
+                    valuePropName="checked"
+                    initialValue={autoAssignDoctor} // Set initial value
+                >
+                    <Checkbox onChange={handleAutoAssignChange}>Auto Assign Doctor</Checkbox>
+                </Form.Item>
                 <Form.Item
                     label="Doctor"
                     name="doctor"
@@ -4876,13 +4905,7 @@ const AppointmentCreateForm: React.FC<AppointmentCreateFormProps> = ({ onSuccess
                     </Select>
                 </Form.Item>
 
-                <Form.Item
-                    name="autoAssignDoctor"
-                    valuePropName="checked"
-                    initialValue={autoAssignDoctor} // Set initial value
-                >
-                    <Checkbox onChange={handleAutoAssignChange}>Auto Assign Doctor</Checkbox>
-                </Form.Item>
+            
 
                 <Form.Item
                   label="Date"
@@ -6299,7 +6322,7 @@ const AdminDashboardLayout: React.FC<DashboardLayoutProps> = ({ children}) => {
                     <Menu
                         mode="inline"
                         selectedKeys={[selectedKey]}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                     />
@@ -6428,7 +6451,7 @@ const DoctorDashboardLayout: React.FC<DoctorDashboardLayoutProps> = ({ children}
                     <Menu
                         mode="inline"
                         selectedKeys={[selectedKey]}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                     />
@@ -6799,7 +6822,7 @@ const NurseDashboardLayout: React.FC<NurseDashboardLayoutProps> = ({ children}) 
                     <Menu
                         mode="inline"
                         selectedKeys={[selectedKey]}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                     />
@@ -6913,7 +6936,7 @@ const PatientDashboardLayout: React.FC<PatientDashboardLayoutProps> = ({ childre
                     <Menu
                         mode="inline"
                         defaultSelectedKeys={['1']}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                         selectedKeys={[selectedKey()]}
@@ -7042,7 +7065,7 @@ const ReceptionistDashboardLayout: React.FC<ReceptionistDashboardLayoutProps> = 
                     <Menu
                         mode="inline"
                         selectedKeys={[selectedKey]}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                     />
@@ -7196,7 +7219,7 @@ const SuperAdminDashboardLayout: React.FC<DashboardLayoutProps> = ({ children}) 
                     <Menu
                         mode="inline"
                         selectedKeys={[selectedKey]}
-                        defaultOpenKeys={['sub1']}
+                        defaultOpenKeys={['sub1', 'sub2']}
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                     />
@@ -7240,7 +7263,10 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const [medicationsList, setMedicationsList] = useState<string[]>([]); // State to hold medications
-    const [currentMedication, setCurrentMedication] = useState(''); // State for current input
+    const [currentMedication, setCurrentMedication] = useState(''); // State for current medication input
+    const [symptomsList, setSymptomsList] = useState<string[]>([]); // State to hold symptoms
+    const [currentSymptom, setCurrentSymptom] = useState(''); // State for current symptom input
+
 
     const onFinish = async (values: any) => {
         try {
@@ -7250,6 +7276,7 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
                 ...values,
                 visitDate: formattedVisitDate,
                 medications: medicationsList, // Send the medications list
+                symptoms: symptomsList, // Send the symptoms list
             };
 
             await createMedicalRecord(medicalRecordData).unwrap();
@@ -7257,6 +7284,8 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
             form.resetFields();
             setMedicationsList([]); // Clear the medications list after successful submission
             setCurrentMedication('');
+            setSymptomsList([]); // Clear the symptoms list after successful submission
+            setCurrentSymptom('');
             onSuccess();
         } catch (error: any) {
             const errorMessage = `Failed to create medical record: ${error?.data.message || 'Unknown error'}`;
@@ -7280,6 +7309,24 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
         setMedicationsList(medicationsList.filter(med => med !== medicationToRemove));
     };
 
+    const handleSymptomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCurrentSymptom(e.target.value);
+    };
+
+    const handleSymptomKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ',' && currentSymptom.trim() !== '') {
+            e.preventDefault(); // Prevent the comma from being entered
+            setSymptomsList([...symptomsList, currentSymptom.trim()]);
+            setCurrentSymptom('');
+        }
+    };
+
+    const handleRemoveSymptom = (symptomToRemove: string) => {
+        setSymptomsList(symptomsList.filter(symptom => symptom !== symptomToRemove));
+    };
+
+
+
     return (
         <>  {contextHolder}
             <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -7290,7 +7337,31 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
                 >
                     <Input />
                 </Form.Item>
-           
+                <Form.Item
+                    label="Symptoms"
+                    name="symptoms" // This is just a label, no actual data is bound here
+                >
+                    <Input
+                        placeholder="Enter symptom, press comma to add"
+                        value={currentSymptom}
+                        onChange={handleSymptomChange}
+                        onKeyDown={handleSymptomKeyDown}
+                    />
+                    <div style={{ marginTop: 8 }}>
+                        {symptomsList.map(symptom => (
+                            <Tag
+                                closable
+                                key={symptom}
+                                onClose={(e) => {
+                                    e.preventDefault();
+                                    handleRemoveSymptom(symptom);
+                                }}
+                            >
+                                {symptom}
+                            </Tag>
+                        ))}
+                    </div>
+                </Form.Item>
                 <Form.Item
                     label="Diagnosis"
                     name="diagnosis"
@@ -7429,14 +7500,18 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
     const [messageApi, contextHolder] = message.useMessage();
     const [medicationsList, setMedicationsList] = useState<string[]>([]);
     const [currentMedication, setCurrentMedication] = useState('');
+    const [symptomsList, setSymptomsList] = useState<string[]>([]);
+    const [currentSymptom, setCurrentSymptom] = useState('');
+
 
     useEffect(() => {
         // Initialize the medicationsList from the record
         setMedicationsList(record.medications || []); // Use an empty array as default
-    }, [record.medications]);
+        setSymptomsList(record.symptoms || []);
+    }, [record.medications, record.symptoms]);
 
     useEffect(() => {
-        // Set form values initially, excluding medications (handled separately)
+        // Set form values initially, excluding medications and symptoms (handled separately)
         form.setFieldsValue({
             patient: record.patient._id,
             doctor: record.doctor._id,
@@ -7455,6 +7530,7 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
                 ...values,
                 visitDate: formattedVisitDate,
                 medications: medicationsList, // Send the updated medications list
+                symptoms: symptomsList,
             };
 
             await updateMedicalRecord({ id: record._id, data: medicalRecordData }).unwrap();
@@ -7480,6 +7556,22 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
 
     const handleRemoveMedication = (medicationToRemove: string) => {
         setMedicationsList(medicationsList.filter(med => med !== medicationToRemove));
+    };
+
+    const handleSymptomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCurrentSymptom(e.target.value);
+    };
+
+    const handleSymptomKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ',' && currentSymptom.trim() !== '') {
+            e.preventDefault();
+            setSymptomsList([...symptomsList, currentSymptom.trim()]);
+            setCurrentSymptom('');
+        }
+    };
+
+    const handleRemoveSymptom = (symptomToRemove: string) => {
+        setSymptomsList(symptomsList.filter(symptom => symptom !== symptomToRemove));
     };
 
     return (
@@ -7541,6 +7633,32 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
                 </Form.Item>
 
                 <Form.Item
+                    label="Symptoms"
+                    name="symptoms" // This is just a label, no actual data is bound here
+                >
+                    <Input
+                        placeholder="Enter symptom, press comma to add"
+                        value={currentSymptom}
+                        onChange={handleSymptomChange}
+                        onKeyDown={handleSymptomKeyDown}
+                    />
+                    <div style={{ marginTop: 8 }}>
+                        {symptomsList.map(symptom => (
+                            <Tag
+                                closable
+                                key={symptom}
+                                onClose={(e) => {
+                                    e.preventDefault();
+                                    handleRemoveSymptom(symptom);
+                                }}
+                            >
+                                {symptom}
+                            </Tag>
+                        ))}
+                    </div>
+                </Form.Item>
+
+                <Form.Item
                     label="Notes"
                     name="notes"
                 >
@@ -7578,7 +7696,7 @@ import React, { useState } from 'react';
 import { useGetMedicalRecordsQuery } from '@/services/medicalRecord/medicalRecordSliceAPI';
 import { Table, Button, Space, Input } from 'antd';
 import { MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
-import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined  } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined, FileTextOutlined  } from '@ant-design/icons';
 import Loader from "@/components/Layout/Loader"
 import dayjs from 'dayjs'; 
 
@@ -7586,16 +7704,17 @@ interface MedicalRecordListProps {
     onView?: (record: MedicalRecord) => void;
     onEdit?: (record: MedicalRecord) => void;
     onDelete?: (record: MedicalRecord) => void;  
+    onSummary?: (record: MedicalRecord) => void; 
 }
 
-const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, onDelete }) => {
+const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, onDelete, onSummary }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [searchTerm, setSearchTerm] = useState('');
     const { data: medicalRecordData, isLoading, isError: isGetMedicalRecordsError, error: getMedicalRecordsError } = useGetMedicalRecordsQuery({
         page: currentPage,
         limit: pageSize,
-        search: searchTerm,
+        search: searchTerm, 
     });
 
     const totalMedicalRecordsCount = medicalRecordData?.totalRecords || 0;
@@ -7618,13 +7737,25 @@ const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, o
             title: 'Patient',
             dataIndex: 'patient',
             key: 'patient',
-            render: (patient: { firstName: string; lastName: string }) => `${patient.firstName} ${patient.lastName}`,
+            render: (patient: { firstName: string; lastName: string } | null | undefined) => {
+                if (patient && patient.firstName && patient.lastName) {
+                    return `${patient.firstName} ${patient.lastName}`;
+                } else {
+                    return 'N/A';  
+                }
+            },
         },
         {
             title: 'Doctor',
             dataIndex: 'doctor',
             key: 'doctor',
-            render: (doctor: { firstName: string; lastName: string }) => `${doctor.firstName} ${doctor.lastName}`,
+            render: (doctor: { firstName: string; lastName: string } | null | undefined) => {
+                if (doctor && doctor.firstName && doctor.lastName) {
+                    return `${doctor.firstName} ${doctor.lastName}`;
+                } else {
+                    return 'N/A'; // Or another suitable placeholder
+                }
+            },
         },
         {
             title: 'Diagnosis',
@@ -7661,6 +7792,11 @@ const MedicalRecordList: React.FC<MedicalRecordListProps> = ({ onEdit, onView, o
                                    {onDelete && (
                                        <Button danger icon={<DeleteOutlined />} onClick={() => onDelete(record)}>
                                            Delete
+                                       </Button>
+                                   )}
+                                    {onSummary && (
+                                       <Button danger icon={<FileTextOutlined />} onClick={() => onSummary(record)}>
+                                           AI summary
                                        </Button>
                                    )}
                                </Space>
@@ -7736,7 +7872,8 @@ const MedicalRecordView: React.FC<MedicalRecordViewProps> = ({ record }) => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Diagnosis">{record.diagnosis}</Descriptions.Item>
                 <Descriptions.Item label="Treatment">{record.treatment}</Descriptions.Item>
-                <Descriptions.Item label="Medications">{record.medications.join(', ')}</Descriptions.Item>
+                <Descriptions.Item label="Symptoms">{record?.symptoms.join(', ')}</Descriptions.Item>
+                <Descriptions.Item label="Medications">{record?.medications.join(', ')}</Descriptions.Item>
                 <Descriptions.Item label="Notes">{record.notes}</Descriptions.Item>
                 <Descriptions.Item label="Visit Date">{formatDateWithTime(record.visitDate)}</Descriptions.Item>
             </Descriptions>
@@ -7745,6 +7882,95 @@ const MedicalRecordView: React.FC<MedicalRecordViewProps> = ({ record }) => {
 };
 
 export default MedicalRecordView;
+
+===== File: /src/components/MedicalRecord/ViewMedicalSummary.tsx =====
+// src/components/MedicalRecord/ViewMedicalSummary.tsx
+'use client';
+
+import React, { useEffect } from 'react';
+import { Typography, Card, Alert, Button, Spin } from 'antd';
+import { useGetMedicalSummaryQuery } from '@/services/medicalRecord/medicalRecordSliceAPI';
+import { ReloadOutlined } from '@ant-design/icons';
+import { Patient } from '@/services/auth/types';
+
+interface ViewMedicalSummaryProps {
+    patient: Patient;
+}
+
+const ViewMedicalSummary: React.FC<ViewMedicalSummaryProps> = ({ patient}) => {
+    const { data: summaryData, isLoading, isError, error, refetch } = useGetMedicalSummaryQuery(patient._id);
+
+    // Auto-refetch whenever the patient(patient ID) changes
+    useEffect(() => {
+        refetch();
+    }, [patient._id, refetch]);
+
+    const handleRefresh = () => {
+        refetch();
+    };
+
+    if (isLoading) {
+        return (
+            <Card title="🩺 AI-Generated Medical Summary">
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Spin size="large" />
+                    <Typography.Paragraph>Generating medical summary...</Typography.Paragraph>
+                </div>
+            </Card>
+        );
+    }
+
+    if (isError) {
+        return <Alert message="Error fetching medical records summary" description={(error as any)?.data?.message || "An unexpected error occurred."} type="error" showIcon />;
+    }
+    
+    if (!summaryData || !summaryData.summary) {
+        return <Alert message="No medical summary available for this patient." type="info" showIcon />;
+    }
+
+    // Convert the AI-generated summary into readable JSX
+    const formattedSummary = summaryData.summary
+        .split("\n\n") // Split by double line breaks to separate sections
+        .map((section, index) => {
+            // Check if the section is a numbered header (e.g., "1. Concise Medical Summary")
+            const match = section.match(/^(\d+)\.\s(.+)$/);
+            if (match) {
+                return <Typography.Title key={index} level={5}>{`📌 ${match[1]}. ${match[2]}`}</Typography.Title>;
+            }
+
+            // Convert bullet points into list items
+            if (section.includes("* ")) {
+                const bulletPoints = section
+                    .split("\n") // Split lines
+                    .filter((line) => line.trim().startsWith("*")) // Only keep bullet points
+                    .map((line, i) => <li key={i}>{line.replace("* ", "").trim()}</li>);
+
+                return <ul key={index}>{bulletPoints}</ul>;
+            }
+
+            // Default case: Render as a paragraph
+            return <Typography.Paragraph key={index}>{section}</Typography.Paragraph>;
+        });
+
+    return (
+        <Card
+            title={
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography.Title level={4}>🩺 AI-Generated Medical Summary</Typography.Title>
+                    <Button icon={<ReloadOutlined />} onClick={handleRefresh} size="small" loading={isLoading}>
+                        Refresh
+                    </Button>
+                </div>
+            }
+        >
+            {formattedSummary}
+            
+        </Card>
+    );
+};
+
+export default ViewMedicalSummary;
+
 
 ===== File: /src/components/Notification/MyNotificationList.tsx =====
 // src/components/Notification/MyNotificationList.tsx
@@ -8293,16 +8519,17 @@ import React, { useState } from 'react';
 import { useGetPatientsQuery } from '@/services/patient/patientSliceAPI';
 import { Table, Button, Space, Input } from 'antd';
 import { Patient } from '@/services/patient/types';
-import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, SearchOutlined, CloseOutlined, EyeOutlined, FileTextOutlined } from '@ant-design/icons';
 import Loader from "@/components/Layout/Loader";
 
 interface PatientListProps {
     onView?: (patient: Patient) => void;
     onEdit?: (patient: Patient) => void;
     onDelete?: (patient: Patient) => void; 
+    onSummary?: (record: Patient) => void; 
 }
 
-const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete }) => {
+const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete, onSummary }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [searchTerm, setSearchTerm] = useState('');
@@ -8364,6 +8591,11 @@ const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete }) =
                                              Delete
                                          </Button>
                                      )}
+                                    {onSummary && (
+                                            <Button icon={<FileTextOutlined />} onClick={() => onSummary(record)}>
+                                            AI summary Medical records
+                                            </Button>
+                                        )}
                                  </Space>
             ),
         },
@@ -11669,6 +11901,7 @@ export interface MedicalRecord {
   diagnosis: string;
   treatment: string;
   medications: string[];
+  symptoms: string[];
   notes: string;
   visitDate: string; //ISO Date String
   createdAt: string;
@@ -11690,6 +11923,7 @@ export interface MedicalRecordCreateRequest {
   diagnosis: string;
   treatment: string;
   medications: string[];
+  symptoms?: string[];
   notes: string;
   visitDate: string; //ISO Date String
 }
@@ -11700,6 +11934,7 @@ interface MedicalRecordUpdateRequest {
   diagnosis?: string;
   treatment?: string;
   medications?: string[];
+  symptoms?: string[];
   notes?: string;
   visitDate?: string; //ISO Date String
 }

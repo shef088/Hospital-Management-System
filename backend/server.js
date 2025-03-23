@@ -97,17 +97,8 @@ app.use(require('./middlewares/errorHandler'));
 
 app.get("/", (req, res) => {
     res.json({
-      message: "Welcome to the Hospital Management System API!",
-      availableEndpoints: [
-        "/api/auth",
-        "/api/appointments",
-        "/api/patients",
-        "/api/staff",
-        "/api/audit-logs",
-        "/api/medical-records",
-        "/api/roles",
-        "/api/departments",
-      ],
+      message: "Welcome to the Hospital Management System API!"
+      
     });
 });
 
