@@ -8,6 +8,7 @@ const MedicalRecordSchema = new mongoose.Schema(
     diagnosis: { type: String, required: true },
     treatment: { type: String },
     medications: [{ type: String }], // List of prescribed meds
+    symptoms: [{ type: String }],
     notes: { type: String },
     visitDate: { type: Date, default: Date.now }, 
   },

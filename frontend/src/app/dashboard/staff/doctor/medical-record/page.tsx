@@ -9,7 +9,7 @@ import MedicalRecordCreateForm from '@/components/MedicalRecord/MedicalRecordCre
 import MedicalRecordEditForm from '@/components/MedicalRecord/MedicalRecordEditForm';
 import MedicalRecordView from '@/components/MedicalRecord/MedicalRecordView';
 import { MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
-import ViewMedicalSummary from '@/components/MedicalRecord/ViewMedicalSummary';
+
 
 const { Title } = Typography;
 
@@ -17,7 +17,6 @@ const DoctorMedicalRecordManagementPage = () => {
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-    const [isViewSummaryModalVisible, setIsViewSummaryModalVisible] = useState(false);
     const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
 
     const handleCreate = () => {
@@ -33,8 +32,7 @@ const DoctorMedicalRecordManagementPage = () => {
         setSelectedMedicalRecord(record);
         setIsViewModalVisible(true);
     };
-
-  x
+ 
     const handleCreateSuccess = () => {
         setIsCreateModalVisible(false);
     };
@@ -58,7 +56,7 @@ const DoctorMedicalRecordManagementPage = () => {
                 Create Medical Record
             </Button>
 
-            <MedicalRecordList onView={handleView} onEdit={handleEdit} onSummary={handleViewSummary} />
+            <MedicalRecordList onView={handleView} onEdit={handleEdit}  />
 
             <Modal
                 title="Create Medical Record"
@@ -95,16 +93,7 @@ const DoctorMedicalRecordManagementPage = () => {
                   )}
               </Modal>
 
-              <Modal
-                title="View Medical Record Summary"
-                open={isViewSummaryModalVisible}
-                onCancel={() => setIsViewSummaryModalVisible(false)}
-                footer={null}
-              >
-                  {selectedMedicalRecord && (
-                      <ViewMedicalSummary record={selectedMedicalRecord} />
-                  )}
-              </Modal>
+             
         </DoctorDashboardLayout>
     );
 };

@@ -113,7 +113,13 @@ const AppointmentCreateForm: React.FC<AppointmentCreateFormProps> = ({ onSuccess
                         }))}
                     />
                 </Form.Item>
-
+                <Form.Item
+                    name="autoAssignDoctor"
+                    valuePropName="checked"
+                    initialValue={autoAssignDoctor} // Set initial value
+                >
+                    <Checkbox onChange={handleAutoAssignChange}>Auto Assign Doctor</Checkbox>
+                </Form.Item>
                 <Form.Item
                     label="Doctor"
                     name="doctor"
@@ -130,13 +136,7 @@ const AppointmentCreateForm: React.FC<AppointmentCreateFormProps> = ({ onSuccess
                     </Select>
                 </Form.Item>
 
-                <Form.Item
-                    name="autoAssignDoctor"
-                    valuePropName="checked"
-                    initialValue={autoAssignDoctor} // Set initial value
-                >
-                    <Checkbox onChange={handleAutoAssignChange}>Auto Assign Doctor</Checkbox>
-                </Form.Item>
+            
 
                 <Form.Item
                   label="Date"

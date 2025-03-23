@@ -20,13 +20,13 @@ const DoctorPatientManagementPage = () => {
         setSelectedPatient(patient);
         setIsViewModalVisible(true);
     };
-    const handleViewSummary = (record: MedicalRecord) => {
-        setSelectedMedicalRecord(record);
+    const handleViewSummary = (patient: Patient) => {
+        setSelectedPatient(patient);
         setIsViewSummaryModalVisible(true);
     };
     const handleSummaryCancel = () => {
         setIsViewSummaryModalVisible(false);
-        setSelectedMedicalRecord(null);
+        setSelectedPatient(null);
     };
 
     return (
@@ -36,7 +36,7 @@ const DoctorPatientManagementPage = () => {
                 <p>View patients your assigned patients here.</p>
 
                 <PatientList
-                    onView={handleView}
+                    onView={handleView} onSummary={handleViewSummary}
                 />
                 <Modal
                     title="View Patient"
@@ -55,7 +55,7 @@ const DoctorPatientManagementPage = () => {
                 footer={null}
               >
                   {selectedPatient && (
-                      <ViewMedicalSummary record={selectedPatient} />
+                      <ViewMedicalSummary  patient={selectedPatient} />
                   )}
               </Modal>
 

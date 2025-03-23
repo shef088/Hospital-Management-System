@@ -12,7 +12,7 @@ interface PatientListProps {
     onView?: (patient: Patient) => void;
     onEdit?: (patient: Patient) => void;
     onDelete?: (patient: Patient) => void; 
-    onSummary?: (record: MedicalRecord) => void; 
+    onSummary?: (record: Patient) => void; 
 }
 
 const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete, onSummary }) => {
@@ -79,7 +79,7 @@ const PatientList: React.FC<PatientListProps> = ({ onView, onEdit, onDelete, onS
                                      )}
                                     {onSummary && (
                                             <Button icon={<FileTextOutlined />} onClick={() => onSummary(record)}>
-                                            AI summary
+                                            AI summary Medical records
                                             </Button>
                                         )}
                                  </Space>

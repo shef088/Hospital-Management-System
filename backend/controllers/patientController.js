@@ -149,17 +149,15 @@ const getAllPatients = async (req, res) => {
     }
 
     // 🔹 Get total count of matching patients
+    const p= await Patient.find()
+    console.log("p::", p)
     const totalPatients = await Patient.countDocuments(query);
 
-    // 🔹 Fetch patients & populate `patientRole` along with permissions
+    // 🔹 Fetch patients  
     const patients = await Patient.find(query)
       .skip(skip)
       .limit(limit)
-      .populate({
-        path: "role",
-        select: "name permissions",
-        populate: { path: "permissions", select: "name" }, // Include permissions
-      });
+       
 
     res.status(200).json({
       totalPatients,

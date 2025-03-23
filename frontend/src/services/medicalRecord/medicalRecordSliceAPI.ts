@@ -9,6 +9,7 @@ export interface MedicalRecord {
   diagnosis: string;
   treatment: string;
   medications: string[];
+  symptoms: string[];
   notes: string;
   visitDate: string; //ISO Date String
   createdAt: string;
@@ -30,6 +31,7 @@ export interface MedicalRecordCreateRequest {
   diagnosis: string;
   treatment: string;
   medications: string[];
+  symptoms?: string[];
   notes: string;
   visitDate: string; //ISO Date String
 }
@@ -40,6 +42,7 @@ interface MedicalRecordUpdateRequest {
   diagnosis?: string;
   treatment?: string;
   medications?: string[];
+  symptoms?: string[];
   notes?: string;
   visitDate?: string; //ISO Date String
 }

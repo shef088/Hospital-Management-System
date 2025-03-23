@@ -14,12 +14,12 @@ const createMedicalRecord = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized: Only doctors can create medical records" });
     }
 
-    const { patient, diagnosis, treatment, notes, medications } = req.body;
+    const { patient, diagnosis, treatment, notes, medications, symptoms } = req.body;
 
     // Use the logged-in doctor's ID instead of getting it from the request body
     const doctor = req.user.id; 
 
-    const newRecord = new MedicalRecord({ patient, doctor, diagnosis, treatment, notes, medications });
+    const newRecord = new MedicalRecord({ patient, doctor, diagnosis, treatment, notes, medications, symptoms });
     await newRecord.save();
 
     res.status(201).json({ message: "Medical record created successfully", record: newRecord });

@@ -3,20 +3,21 @@
 
 import React, { useEffect } from 'react';
 import { Typography, Card, Alert, Button, Spin } from 'antd';
-import { useGetMedicalSummaryQuery, MedicalRecord } from '@/services/medicalRecord/medicalRecordSliceAPI';
+import { useGetMedicalSummaryQuery } from '@/services/medicalRecord/medicalRecordSliceAPI';
 import { ReloadOutlined } from '@ant-design/icons';
+import { Patient } from '@/services/auth/types';
 
 interface ViewMedicalSummaryProps {
-    record: MedicalRecord;
+    patient: Patient;
 }
 
-const ViewMedicalSummary: React.FC<ViewMedicalSummaryProps> = ({ record }) => {
-    const { data: summaryData, isLoading, isError, error, refetch } = useGetMedicalSummaryQuery(record.patient._id);
+const ViewMedicalSummary: React.FC<ViewMedicalSummaryProps> = ({ patient}) => {
+    const { data: summaryData, isLoading, isError, error, refetch } = useGetMedicalSummaryQuery(patient._id);
 
-    // Auto-refetch whenever the record (patient ID) changes
+    // Auto-refetch whenever the patient(patient ID) changes
     useEffect(() => {
         refetch();
-    }, [record.patient._id, refetch]);
+    }, [patient._id, refetch]);
 
     const handleRefresh = () => {
         refetch();

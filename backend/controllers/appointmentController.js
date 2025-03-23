@@ -79,6 +79,11 @@ const createAppointment = async (req, res) => {
       doctor = doctorData._id;
       console.log("Auto-assigned doctor:", doctorData);
     }
+    
+    patientExists.assignedDoctor = doctor;
+    console.log("assigned doc!!!!")
+    await patientExists.save();
+      
 
     // ✅ Auto-assign best available time if not provided
     if (!time) {
@@ -106,6 +111,7 @@ const createAppointment = async (req, res) => {
 
     await newAppointment.save();
 
+   
     // ✅ Create a Task for the Receptionist
     if (receptionist) {
       const task = new Task({

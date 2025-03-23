@@ -19,14 +19,18 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
     const [messageApi, contextHolder] = message.useMessage();
     const [medicationsList, setMedicationsList] = useState<string[]>([]);
     const [currentMedication, setCurrentMedication] = useState('');
+    const [symptomsList, setSymptomsList] = useState<string[]>([]);
+    const [currentSymptom, setCurrentSymptom] = useState('');
+
 
     useEffect(() => {
         // Initialize the medicationsList from the record
         setMedicationsList(record.medications || []); // Use an empty array as default
-    }, [record.medications]);
+        setSymptomsList(record.symptoms || []);
+    }, [record.medications, record.symptoms]);
 
     useEffect(() => {
-        // Set form values initially, excluding medications (handled separately)
+        // Set form values initially, excluding medications and symptoms (handled separately)
         form.setFieldsValue({
             patient: record.patient._id,
             doctor: record.doctor._id,
@@ -45,6 +49,7 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
                 ...values,
                 visitDate: formattedVisitDate,
                 medications: medicationsList, // Send the updated medications list
+                symptoms: symptomsList,
             };
 
             await updateMedicalRecord({ id: record._id, data: medicalRecordData }).unwrap();
@@ -70,6 +75,22 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
 
     const handleRemoveMedication = (medicationToRemove: string) => {
         setMedicationsList(medicationsList.filter(med => med !== medicationToRemove));
+    };
+
+    const handleSymptomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCurrentSymptom(e.target.value);
+    };
+
+    const handleSymptomKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ',' && currentSymptom.trim() !== '') {
+            e.preventDefault();
+            setSymptomsList([...symptomsList, currentSymptom.trim()]);
+            setCurrentSymptom('');
+        }
+    };
+
+    const handleRemoveSymptom = (symptomToRemove: string) => {
+        setSymptomsList(symptomsList.filter(symptom => symptom !== symptomToRemove));
     };
 
     return (
@@ -125,6 +146,32 @@ const MedicalRecordEditForm: React.FC<MedicalRecordEditFormProps> = ({ record, o
                                 }}
                             >
                                 {medication}
+                            </Tag>
+                        ))}
+                    </div>
+                </Form.Item>
+
+                <Form.Item
+                    label="Symptoms"
+                    name="symptoms" // This is just a label, no actual data is bound here
+                >
+                    <Input
+                        placeholder="Enter symptom, press comma to add"
+                        value={currentSymptom}
+                        onChange={handleSymptomChange}
+                        onKeyDown={handleSymptomKeyDown}
+                    />
+                    <div style={{ marginTop: 8 }}>
+                        {symptomsList.map(symptom => (
+                            <Tag
+                                closable
+                                key={symptom}
+                                onClose={(e) => {
+                                    e.preventDefault();
+                                    handleRemoveSymptom(symptom);
+                                }}
+                            >
+                                {symptom}
                             </Tag>
                         ))}
                     </div>

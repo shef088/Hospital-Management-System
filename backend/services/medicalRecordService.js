@@ -17,22 +17,34 @@ const generateMedicalSummary = async (patientId) => {
       date: record.visitDate.toISOString().split("T")[0],
       diagnosis: record.diagnosis,
       treatment: record.treatment || "N/A",
+      symptoms: record.symptoms.length ? record.symptoms.join(", ") : "None",
       medications: record.medications.length ? record.medications.join(", ") : "None",
     }));
+    console.log("medical data for ai analysis::", medicalData)
 
     // Construct prompt for AI analysis
     const prompt = `
-    Here is a patient's recent medical history:
-
+    You are an advanced medical AI assisting doctors in analyzing patient history. Below is a summary of the last 10 medical records for a patient:
+    
     ${JSON.stringify(medicalData, null, 2)}
-
+    
     **TASK:**  
-    1️⃣ Provide a concise medical summary.  
-    2️⃣ Suggest possible improvements in treatment or follow-up.  
-    3️⃣ Identify any contradictions, missing details, or concerns regarding the diagnosis or medications.  
-    4️⃣ Offer professional recommendations for further steps.  
-    Respond as if advising a doctor.  
+    🔍 **1. Clinical Summary:** Provide a brief but medically accurate summary of the patient's history, including patterns and trends.  
+    
+    💡 **2. Treatment Optimization:** Assess the effectiveness of current treatments. Are there alternative medications, lifestyle changes, or new clinical guidelines that should be considered?  
+    
+    ⚠️ **3. Risk Analysis & Warnings:** Identify potential **medication interactions, overlooked symptoms, or signs of disease progression**. Highlight anything requiring **urgent attention**.  
+    
+    📊 **4. Predictive Insights:** Based on the patient's medical history, predict potential future health risks. Suggest preventive measures or screenings that could be beneficial.  
+    
+    🩺 **5. Actionable Doctor Recommendations:** Offer structured, **evidence-based recommendations** as if advising a specialist.  
+    - Should any medications be reconsidered or changed?  
+    - Does the diagnosis history indicate a possible **underlying condition** that was missed?  
+    - Are there lab tests, imaging, or specialist referrals that should be done?  
+    
+    **Provide your response in a structured, professional format suitable for clinical review.**  
     `;
+    
 
     // Send request to Google AI
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});

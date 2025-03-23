@@ -17,7 +17,10 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const [medicationsList, setMedicationsList] = useState<string[]>([]); // State to hold medications
-    const [currentMedication, setCurrentMedication] = useState(''); // State for current input
+    const [currentMedication, setCurrentMedication] = useState(''); // State for current medication input
+    const [symptomsList, setSymptomsList] = useState<string[]>([]); // State to hold symptoms
+    const [currentSymptom, setCurrentSymptom] = useState(''); // State for current symptom input
+
 
     const onFinish = async (values: any) => {
         try {
@@ -27,6 +30,7 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
                 ...values,
                 visitDate: formattedVisitDate,
                 medications: medicationsList, // Send the medications list
+                symptoms: symptomsList, // Send the symptoms list
             };
 
             await createMedicalRecord(medicalRecordData).unwrap();
@@ -34,6 +38,8 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
             form.resetFields();
             setMedicationsList([]); // Clear the medications list after successful submission
             setCurrentMedication('');
+            setSymptomsList([]); // Clear the symptoms list after successful submission
+            setCurrentSymptom('');
             onSuccess();
         } catch (error: any) {
             const errorMessage = `Failed to create medical record: ${error?.data.message || 'Unknown error'}`;
@@ -57,6 +63,24 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
         setMedicationsList(medicationsList.filter(med => med !== medicationToRemove));
     };
 
+    const handleSymptomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCurrentSymptom(e.target.value);
+    };
+
+    const handleSymptomKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ',' && currentSymptom.trim() !== '') {
+            e.preventDefault(); // Prevent the comma from being entered
+            setSymptomsList([...symptomsList, currentSymptom.trim()]);
+            setCurrentSymptom('');
+        }
+    };
+
+    const handleRemoveSymptom = (symptomToRemove: string) => {
+        setSymptomsList(symptomsList.filter(symptom => symptom !== symptomToRemove));
+    };
+
+
+
     return (
         <>  {contextHolder}
             <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -67,7 +91,31 @@ const MedicalRecordCreateForm: React.FC<MedicalRecordCreateFormProps> = ({ onSuc
                 >
                     <Input />
                 </Form.Item>
-           
+                <Form.Item
+                    label="Symptoms"
+                    name="symptoms" // This is just a label, no actual data is bound here
+                >
+                    <Input
+                        placeholder="Enter symptom, press comma to add"
+                        value={currentSymptom}
+                        onChange={handleSymptomChange}
+                        onKeyDown={handleSymptomKeyDown}
+                    />
+                    <div style={{ marginTop: 8 }}>
+                        {symptomsList.map(symptom => (
+                            <Tag
+                                closable
+                                key={symptom}
+                                onClose={(e) => {
+                                    e.preventDefault();
+                                    handleRemoveSymptom(symptom);
+                                }}
+                            >
+                                {symptom}
+                            </Tag>
+                        ))}
+                    </div>
+                </Form.Item>
                 <Form.Item
                     label="Diagnosis"
                     name="diagnosis"

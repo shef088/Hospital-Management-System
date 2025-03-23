@@ -23,7 +23,8 @@ const MedicalRecordView: React.FC<MedicalRecordViewProps> = ({ record }) => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Diagnosis">{record.diagnosis}</Descriptions.Item>
                 <Descriptions.Item label="Treatment">{record.treatment}</Descriptions.Item>
-                <Descriptions.Item label="Medications">{record.medications.join(', ')}</Descriptions.Item>
+                <Descriptions.Item label="Symptoms">{record?.symptoms.join(', ')}</Descriptions.Item>
+                <Descriptions.Item label="Medications">{record?.medications.join(', ')}</Descriptions.Item>
                 <Descriptions.Item label="Notes">{record.notes}</Descriptions.Item>
                 <Descriptions.Item label="Visit Date">{formatDateWithTime(record.visitDate)}</Descriptions.Item>
             </Descriptions>
