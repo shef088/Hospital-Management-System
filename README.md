@@ -88,8 +88,8 @@ Provide detailed, step-by-step instructions for setting up the project. Be very 
 1.  **Clone the repository:**
 
     ```bash
-    git clone [your repository link]
-    cd [your repository folder]/backend
+    git clone https://github.com/shef088/hos
+    cd /backend
     ```
 
 2.  **Install dependencies:**
